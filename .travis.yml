@@ -24,8 +24,10 @@ install:
 script:
 - spago build
 - spago test
+- spago docs
 - spago bundle-app -m Docs.Search.App --to docs-search-app.js
 - spago bundle-app -m Docs.Search.IndexBuilder --to index-builder.js
+- node index-builder.js
 
 deploy:
   - provider: releases
