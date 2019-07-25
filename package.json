@@ -11,7 +11,8 @@
   "files": [
     "dist/purescript-docs-search",
     "dist/docs-search-app.js",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "test": "spago test",
