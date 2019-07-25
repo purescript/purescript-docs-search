@@ -27,6 +27,7 @@ script:
 - spago test
 - spago docs
 - npm run build
+- npm test
 - ./dist/purescript-docs-search build-index
 
 deploy:
