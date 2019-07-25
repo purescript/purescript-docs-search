@@ -7,7 +7,7 @@
     "test": "test"
   },
   "bin": {
-    "purescript-docs-search": "dist/main.js"
+    "purescript-docs-search": "dist/purescript-docs-search"
   },
   "files": [
     "dist/main.js",
@@ -17,7 +17,7 @@
   "scripts": {
     "test": "spago test",
     "bundle-app": "spago bundle-app -m Docs.Search.App --to dist/docs-search-app.js",
-    "bundle-main": "spago bundle-app -m Docs.Search.Main --to dist/main.js && browserify --no-builtins --no-commondir --no-detect-globals --node dist/main.js --outfile dist/main-bundled.js && echo \"#!/usr/bin/env node\" > dist/main.js && cat dist/main-bundled.js >> dist/main.js && rm dist/main-bundled.js",
+    "bundle-main": "spago bundle-app -m Docs.Search.Main --to dist/main.js && browserify --no-builtins --no-commondir --no-detect-globals --node dist/main.js --outfile dist/main.js && echo \"#!/usr/bin/env node\" > dist/purescript-docs-search && cat dist/main.js >> dist/purescript-docs-search && rm dist/main.js && chmod +x dist/purescript-docs-search",
     "build": "npm run bundle-app && npm run bundle-main",
     "clean": "rm -rf dist"
   },
