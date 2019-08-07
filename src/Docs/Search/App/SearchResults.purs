@@ -12,7 +12,6 @@ import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), Kind(..
 import Docs.Search.Engine as SearchEngine
 import Docs.Search.Engine (ResultsType(..))
 
-import CSS (textWhitespace, whitespacePreWrap)
 import Data.Array ((!!))
 import Data.Array as Array
 import Data.List as List
@@ -24,9 +23,10 @@ import Data.String.Pattern (Pattern(..)) as String
 import Effect.Aff (Aff)
 import Halogen as H
 import Halogen.HTML as HH
-import Halogen.HTML.CSS as HS
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import MarkdownIt as MD
+import MarkdownIt.Renderer.Halogen as MDH
 import Web.DOM.Element (Element)
 import Web.DOM.Element as Element
 import Web.HTML as HTML
@@ -44,6 +44,7 @@ type State = { searchEngineState :: SearchEngine.State
              , contents :: Element
              , resultsCount :: Int
              , mode :: Mode
+             , markdownIt :: MD.MarkdownIt
              }
 
 data Query a
@@ -56,8 +57,9 @@ data Action
 mkComponent
   :: forall o i
   .  Element
+  -> MD.MarkdownIt
   -> H.Component HH.HTML Query i o Aff
-mkComponent contents =
+mkComponent contents markdownIt =
   H.mkComponent
     { initialState: const { searchEngineState: mempty
                           , results: []
@@ -66,6 +68,7 @@ mkComponent contents =
                           , contents
                           , resultsCount: config.resultsCount
                           , mode: Off
+                          , markdownIt
                           }
     , render
     , eval: H.mkEval $ H.defaultEval { handleQuery = handleQuery
@@ -179,7 +182,7 @@ render state@{ mode: Active } =
     ]
 
   , HH.div_ $
-    Array.concat $ shownResults <#> renderResult
+    Array.concat $ shownResults <#> renderResult state.markdownIt
 
   , HH.div [ HP.class_ (wrap "load_more"), HP.id_ "load-more" ]
     [ if Array.length shownResults < Array.length state.results
@@ -208,9 +211,10 @@ renderSummary text =
 
 renderResult
   :: forall a
-  .  SearchResult
+  .  MD.MarkdownIt
+  -> SearchResult
   -> Array (HH.HTML a Action)
-renderResult = unwrap >>> \result ->
+renderResult markdownIt = unwrap >>> \result ->
   [ HH.div [ HP.class_ (wrap "result") ]
     [ HH.h3 [ HP.class_ (wrap "result__title") ]
       [ HH.a [ HP.class_ (wrap "result__link")
@@ -226,11 +230,7 @@ renderResult = unwrap >>> \result ->
   , HH.div [ HP.class_ (wrap "result__body") ] $
     renderResultType result <>
 
-    result.comments >#>
-      \comments -> [ HH.pre [ HS.style do
-                                 textWhitespace whitespacePreWrap ]
-                     [ HH.text comments ]
-                   ]
+    result.comments >#> pure <<< MDH.render markdownIt
 
   , HH.div [ HP.class_ (wrap "result__actions") ]
 

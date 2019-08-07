@@ -13,6 +13,7 @@ import Effect (Effect)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
+import MarkdownIt as MD
 import Web.DOM.Document as Document
 import Web.DOM.Element as Element
 import Web.DOM.Node as Node
@@ -31,10 +32,13 @@ main = do
   insertStyle doc
   mbContainers <- getContainers doc
 
+  -- Initialize a `markdown-it` instance (we need it to render the docs as markdown)
+  markdownIt <- MD.newMarkdownIt MD.Default mempty
+
   whenJust mbContainers \ { searchField, searchResults, pageContents } -> do
     HA.runHalogenAff do
       sfio <- runUI SearchField.component unit searchField
-      srio <- runUI (SearchResults.mkComponent pageContents) unit searchResults
+      srio <- runUI (SearchResults.mkComponent pageContents markdownIt) unit searchResults
       sfio.subscribe $
         Coroutine.consumer (srio.query <<< H.tell <<< SearchResults.MessageFromSearchField)
 

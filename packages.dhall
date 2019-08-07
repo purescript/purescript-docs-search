@@ -59,6 +59,21 @@ let additions =
 		  [ "enums" ]
 		  "https://github.com/Risto-Stevcev/purescript-exitcodes.git"
 		  "v4.0.0"
+	  , markdown-it =
+		  mkPackage
+		  [ "prelude", "effect", "options" ]
+		  "https://github.com/nonbili/purescript-markdown-it.git"
+		  "v0.2.0"
+	  , html-parser-halogen =
+		  mkPackage
+		  [ "string-parsers", "generics-rep", "halogen" ]
+		  "https://github.com/rnons/purescript-html-parser-halogen.git"
+		  "1bdccb1f9801f671dbfd59d42ef0429fdce44e54"
+	  , markdown-it-halogen =
+		  mkPackage
+		  [ "markdown-it", "html-parser-halogen" ]
+		  "https://github.com/nonbili/purescript-markdown-it-halogen.git"
+		  "16f3ee4c1d1120da9c80102f846245294da3438d"
 	  }
 
 in  upstream ⫽ overrides ⫽ additions

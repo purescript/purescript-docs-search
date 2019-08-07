@@ -17,6 +17,8 @@
     , "halogen"
     , "halogen-css"
     , "lists"
+    , "markdown-it"
+    , "markdown-it-halogen"
     , "maybe"
     , "newtype"
     , "node-buffer"
