@@ -51,17 +51,17 @@ instance showCommands :: Show Commands where
 commands :: Parser (Maybe Commands)
 commands = optional $ subparser
   ( command "build-index"
-    ( info buildIndex
+    ( info (buildIndex <**> helper)
       ( progDesc "Build the index used to search for definitions and patch the generated docs so that they include a search field."
       )
     )
  <> command "search"
-    ( info startInteractive
+    ( info (startInteractive <**> helper)
       ( progDesc "Run the search engine."
       )
     )
  <> command "version"
-    ( info (pure Version)
+    ( info (pure Version <**> helper)
       ( progDesc "Show purescript-docs-search version."
       )
     )

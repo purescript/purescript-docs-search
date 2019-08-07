@@ -5,7 +5,7 @@ import Prelude
 import Docs.Search.Config (config)
 import Docs.Search.Declarations (Declarations(..), mkDeclarations)
 import Docs.Search.DocsJson (DocsJson)
-import Docs.Search.Extra ((>#>), glob)
+import Docs.Search.Extra ((>#>))
 import Docs.Search.Index (getPartId)
 import Docs.Search.SearchResult (SearchResult)
 import Docs.Search.TypeIndex (TypeIndex, mkTypeIndex)
@@ -285,3 +285,5 @@ showGlobs = Array.intercalate ", "
 
 -- | Get __dirname.
 foreign import getDirname :: Effect String
+
+foreign import glob :: String -> Effect (Array String)

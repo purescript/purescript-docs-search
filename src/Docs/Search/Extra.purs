@@ -18,8 +18,6 @@ foldMapFlipped = flip foldMap
 
 infixr 7 foldMapFlipped as >#>
 
-foreign import glob :: String -> Effect (Array String)
-
 foldl1 :: forall a. (a -> a -> a) -> NonEmptyList a -> a
 foldl1 f as =
   case uncons as of

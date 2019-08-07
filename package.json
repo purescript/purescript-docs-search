@@ -25,6 +25,7 @@
     "chmod-main": "chmod +x dist/purescript-docs-search",
     "build-main": "npm run bundle-main && npm run parcel-main && npm run add-shebang && rm dist/main.js && npm run chmod-main",
     "build": "npm run build-app && npm run build-main",
+    "build-dev": "npm run bundle-main && npm run add-shebang && rm dist/main.js && npm run chmod-main && npm run bundle-app",
     "clean": "rm -rf dist",
     "check-version": "[ \"$(./dist/purescript-docs-search version)\" = \"$npm_package_version\" ]",
     "test": "spago test && npm run check-version"
