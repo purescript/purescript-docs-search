@@ -37,6 +37,8 @@ import Text.Parsing.StringParser (ParseError, Parser, runParser, try)
 import Text.Parsing.StringParser.CodePoints (alphaNum, anyLetter, char, eof, lowerCaseChar, skipSpaces, string, upperCaseChar)
 import Text.Parsing.StringParser.Combinators (fix, sepBy, sepBy1, sepEndBy, sepEndBy1)
 
+-- | We need type queries because we don't have a full-featured type parser
+-- | available.
 data TypeQuery
   = QVar String
   | QConst String
@@ -185,6 +187,9 @@ derive instance genericSubstitution :: Generic Substitution _
 instance showSubstitution :: Show Substitution where
   show x = genericShow x
 
+-- | A mock-up of unification algorithm, that does not unify anything, actually.
+-- | We use it to estimate how far a type is from a type query, by looking into
+-- | the resulting list.
 unify :: TypeQuery -> Type -> List Substitution
 unify query type_ = go Nil (List.singleton { q: query, t: type_ })
   where
@@ -284,6 +289,7 @@ unify query type_ = go Nil (List.singleton { q: query, t: type_ })
     go acc ({ q, t: REmpty } : rest) =
       go (QueryMismatch q : acc) rest
 
+-- | Sum various penalties.
 penalty :: TypeQuery -> Type -> Int
 penalty typeQuery ty =
   let substs = unify typeQuery ty in

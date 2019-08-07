@@ -2,6 +2,7 @@ module Docs.Search.Config where
 
 import Prelude
 
+-- | Some magic constants.
 config =
   { outputDirectory: "output"
   , requiredDirectories:

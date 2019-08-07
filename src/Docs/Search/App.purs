@@ -1,3 +1,4 @@
+-- | This is the main module of the client-side Halogen app.
 module Docs.Search.App where
 
 import Prelude
@@ -72,6 +73,7 @@ insertStyle doc = do
     margin-right: 0.25em;
   }
   """
+
   mbHead <-
     ParentNode.querySelector (wrap "head") (Document.toParentNode doc)
 
@@ -82,9 +84,12 @@ insertStyle doc = do
     void $ Node.appendChild (Text.toNode contents) (Element.toNode style)
     void $ Node.appendChild (Element.toNode style) (Element.toNode head)
 
-getContainers :: Document.Document -> Effect (Maybe { searchField :: HTML.HTMLElement
-                                                    , searchResults :: HTML.HTMLElement
-                                                    , pageContents :: Element.Element })
+-- | Query the DOM for specific elements that should always be present.
+getContainers
+  :: Document.Document
+  -> Effect (Maybe { searchField :: HTML.HTMLElement
+                   , searchResults :: HTML.HTMLElement
+                   , pageContents :: Element.Element })
 getContainers doc = do
   let docPN = Document.toParentNode doc
   mbBanner <-

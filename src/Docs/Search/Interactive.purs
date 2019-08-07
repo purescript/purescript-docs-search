@@ -1,3 +1,4 @@
+-- | Definitions for the "search REPL".
 module Docs.Search.Interactive where
 
 import Prelude

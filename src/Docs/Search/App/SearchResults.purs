@@ -1,3 +1,4 @@
+-- | This module contains a Halogen component for search results.
 module Docs.Search.App.SearchResults where
 
 import Prelude
@@ -134,6 +135,7 @@ handleAction = case _ of
       showPageContents
       H.modify_ (_ { input = "", mode = Off })
 
+-- | Inverse of `hidePageContents`
 showPageContents
   :: forall o
   .  H.HalogenM State Action () o Aff Unit
@@ -142,6 +144,7 @@ showPageContents = do
   H.liftEffect do
     Element.removeAttribute "style" state.contents
 
+-- | When search UI is active, we want to hide the main page contents.
 hidePageContents
   :: forall o
   .  H.HalogenM State Action () o Aff Unit
@@ -215,6 +218,7 @@ renderResult
   -> SearchResult
   -> Array (HH.HTML a Action)
 renderResult markdownIt = unwrap >>> \result ->
+  -- class names here and below are from Pursuit.
   [ HH.div [ HP.class_ (wrap "result") ]
     [ HH.h3 [ HP.class_ (wrap "result__title") ]
       [ HH.a [ HP.class_ (wrap "result__link")
@@ -568,6 +572,7 @@ renderKind = case _ of
   FunKind k1 k2   -> HH.span_ [ renderKind k1, syntax " -> ", renderKind k2 ]
   NamedKind qname -> renderQualifiedName false KindLevel qname
 
+-- | Construct a `href` property value w.r.t. `DeclLevel`.
 makeHref
   :: forall t rest
   .  DeclLevel

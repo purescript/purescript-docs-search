@@ -1,3 +1,4 @@
+-- | The main module of the CLI interface app.
 module Docs.Search.Main where
 
 import Prelude

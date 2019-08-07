@@ -5,7 +5,6 @@ import Prelude
 import Data.Foldable (class Foldable, foldMap, foldl)
 import Data.List.NonEmpty (NonEmptyList, cons', uncons)
 import Data.Maybe (Maybe(..))
-import Effect (Effect)
 import Data.List as List
 import Data.List ((:))
 

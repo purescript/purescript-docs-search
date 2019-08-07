@@ -1,3 +1,5 @@
+-- | A "search engine" that determines if a query is a declaration query or a type query, and
+-- | searches for it in the corresponding index.
 module Docs.Search.Engine where
 
 import Prelude

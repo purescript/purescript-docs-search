@@ -31,9 +31,7 @@ derive newtype instance semigroupDeclarations :: Semigroup Declarations
 derive newtype instance monoidDeclarations :: Monoid Declarations
 
 mkDeclarations :: Array DocsJson -> Declarations
-mkDeclarations docsJson = Declarations trie
-  where
-    trie = foldr insertDocsJson mempty docsJson
+mkDeclarations = Declarations <<< foldr insertDocsJson mempty
 
 insertDocsJson
   :: DocsJson
@@ -48,7 +46,7 @@ insertDeclaration
   -> Trie Char (List SearchResult)
   -> Trie Char (List SearchResult)
 insertDeclaration moduleName entry@(Declaration { title }) trie
-  = foldr insertSearchResult trie (resultsForEntry moduleName entry)
+  = foldr insertSearchResult trie (resultsForDeclaration moduleName entry)
 
 insertSearchResult
   :: { path :: String
@@ -67,13 +65,15 @@ insertSearchResult { path, result } trie =
           Nothing ->
             Just $ List.singleton result
 
-resultsForEntry
+-- | For each declaration, extract its own `SearchResult` and `SearchResult`s
+-- | corresponding to its children (e.g. a class declaration contains class members).
+resultsForDeclaration
   :: ModuleName
   -> Declaration
   -> List { path :: String
           , result :: SearchResult
           }
-resultsForEntry moduleName indexEntry@(Declaration entry) =
+resultsForDeclaration moduleName indexEntry@(Declaration entry) =
   let { info, title, sourceSpan, comments, children } = entry
       { name, declLevel } = getLevelAndName info.declType title
       packageName = extractPackageName sourceSpan.name
@@ -192,6 +192,7 @@ extractPackageName name =
         Nothing ->
           Just "<local package>"
 
+-- | Extract `SearchResults` from a `ChildDeclaration`.
 resultsForChildDeclaration
   :: PackageName
   -> ModuleName
@@ -262,6 +263,9 @@ mkChildInfo parentResult (ChildDeclaration { info } ) =
                   (\arg -> compose (\type'' -> ForAll arg type'' Nothing))
                   identity allArguments
 
+              -- Finally, we have a restored type. It allows us to search for type members the same way
+              -- we search for functions. And types of class member results appear with the correct
+              -- class constraints.
               restoredType = restoreType $
                 ConstrainedType (Constraint { constraintClass
                                             , constraintArgs: typeClassArguments <#> TypeVar

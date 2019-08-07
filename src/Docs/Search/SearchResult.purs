@@ -11,6 +11,7 @@ import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 
+-- | Metadata that makes sense only for certain types of search results.
 data ResultInfo
   = DataResult            { typeArguments :: Array TypeArgument
                           , dataDeclType :: DataDeclType }
@@ -37,6 +38,7 @@ instance encodeJsonResultInfo :: EncodeJson ResultInfo where
 instance decodeJsonResultInfo :: DecodeJson ResultInfo where
   decodeJson = genericDecodeJson
 
+-- | Extract the type field.
 typeOf :: ResultInfo -> Maybe Type
 typeOf (TypeSynonymResult { type: res }) =
   Just res
@@ -46,6 +48,7 @@ typeOf (ValueResult { type: res }) =
   Just res
 typeOf _ = Nothing
 
+-- | Common metadata for all types of search results.
 newtype SearchResult
   = SearchResult { name :: String
                  , comments :: Maybe String
