@@ -234,7 +234,7 @@ renderResult markdownIt = unwrap >>> \result ->
   , HH.div [ HP.class_ (wrap "result__body") ] $
     renderResultType result <>
 
-    result.comments >#> pure <<< MDH.render markdownIt
+    result.comments >#> pure <<< MDH.render_ markdownIt
 
   , HH.div [ HP.class_ (wrap "result__actions") ]
 

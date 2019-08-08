@@ -63,17 +63,17 @@ let additions =
 		  mkPackage
 		  [ "prelude", "effect", "options" ]
 		  "https://github.com/nonbili/purescript-markdown-it.git"
-		  "v0.2.0"
+		  "v0.4.0"
 	  , html-parser-halogen =
 		  mkPackage
 		  [ "string-parsers", "generics-rep", "halogen" ]
 		  "https://github.com/rnons/purescript-html-parser-halogen.git"
-		  "1bdccb1f9801f671dbfd59d42ef0429fdce44e54"
+		  "890da763cdd2a1049ab8837e477c5ba1fcf6d4ce"
 	  , markdown-it-halogen =
 		  mkPackage
 		  [ "markdown-it", "html-parser-halogen" ]
 		  "https://github.com/nonbili/purescript-markdown-it-halogen.git"
-		  "16f3ee4c1d1120da9c80102f846245294da3438d"
+		  "08c9625015bf04214be14e45230e8ce12f3fa2bf"
 	  }
 
 in  upstream ⫽ overrides ⫽ additions
