@@ -98,12 +98,13 @@ getContainers doc = do
     ParentNode.querySelector (wrap ".everything-except-footer") docPN
   mbContainer <-
     ParentNode.querySelector (wrap ".everything-except-footer > .container") docPN
-  case mbBanner, mbEverything, mbContainer of
-    Just banner, Just everything, Just pageContents -> do
+  case unit of
+    _ | Just banner       <- mbBanner
+      , Just everything   <- mbEverything
+      , Just pageContents <- mbContainer -> do
       search <- Document.createElement "div" doc
       void $ Node.appendChild (Element.toNode search) (Element.toNode banner)
       pure $ fromElement search     >>= \searchField ->
              fromElement everything >>= \searchResults ->
              pure { searchField, searchResults, pageContents }
-    _, _, _ ->
-      pure Nothing
+      | otherwise -> pure Nothing

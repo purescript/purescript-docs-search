@@ -56,14 +56,13 @@ insertSearchResult
   -> Trie Char (List SearchResult)
 insertSearchResult { path, result } trie =
   let path' = List.fromFoldable $ toCharArray $ toLower path in
-    alter path' updateResults trie
+    alter path' (Just <<< updateResults) trie
     where
-      updateResults mbOldResults =
-        case mbOldResults of
-          Just oldResults ->
-            Just $ result : oldResults
-          Nothing ->
-            Just $ List.singleton result
+      updateResults mbOldResults
+        | Just oldResults <- mbOldResults =
+            result : oldResults
+        | otherwise =
+            List.singleton result
 
 -- | For each declaration, extract its own `SearchResult` and `SearchResult`s
 -- | corresponding to its children (e.g. a class declaration contains class members).
@@ -103,29 +102,28 @@ mkInfo declLevel (Declaration { info, title }) =
   case info.declType of
 
     DeclValue ->
-      info.type <#>
-      \ty -> ValueResult { type: ty }
+      info."type" <#> \ty -> ValueResult { type: ty }
 
     DeclData ->
-       make <$> info.typeArguments <*> info.dataDeclType
-        where
-          make typeArguments dataDeclType =
-            DataResult { typeArguments, dataDeclType }
+      make <$> info.typeArguments <*> info.dataDeclType
+      where
+        make typeArguments dataDeclType =
+          DataResult { typeArguments, dataDeclType }
 
     DeclExternData ->
-      info.kind <#>
-      \kind -> ExternDataResult { kind }
+      info.kind <#> \kind -> ExternDataResult { kind }
 
     DeclTypeSynonym ->
-      make <$> info.type <*> info.arguments
+      make <$> info."type" <*> info.arguments
         where
-          make ty args = TypeSynonymResult { type: ty, arguments: args }
+          make ty args = TypeSynonymResult { "type": ty, arguments: args }
 
-    DeclTypeClass ->
-      case info.fundeps, info.arguments, info.superclasses of
-        Just fundeps, Just arguments, Just superclasses ->
-          Just $ TypeClassResult { fundeps, arguments, superclasses }
-        _, _, _ -> Nothing
+    DeclTypeClass
+      | Just fundeps      <- info.fundeps
+      , Just arguments    <- info.arguments
+      , Just superclasses <- info.superclasses ->
+        Just $ TypeClassResult { fundeps, arguments, superclasses }
+      | otherwise -> Nothing
 
     DeclAlias ->
       case declLevel of
@@ -200,10 +198,8 @@ resultsForChildDeclaration
   -> ChildDeclaration
   -> List { path :: String, result :: SearchResult }
 resultsForChildDeclaration packageName moduleName parentResult
-  child@(ChildDeclaration { title, info, comments, mbSourceSpan }) =
-    case mkChildInfo parentResult child of
-      Nothing -> mempty
-      Just resultInfo ->
+  child@(ChildDeclaration { title, info, comments, mbSourceSpan })
+  | Just resultInfo <- mkChildInfo parentResult child =
         { path: title
         , result: SearchResult { name: title
                                , comments
@@ -218,6 +214,7 @@ resultsForChildDeclaration packageName moduleName parentResult
                                , info: resultInfo
                                }
         } # List.singleton
+  | otherwise = mempty
 
 mkChildInfo
   :: SearchResult
@@ -234,7 +231,7 @@ mkChildInfo parentResult (ChildDeclaration { info } ) =
           -- We need to reconstruct a "real" type of a type class member.
           -- For example, if `unconstrainedType` is the type of `pure`, i.e. `forall a. a -> m a`,
           -- `restoredType` should be `forall m a. Control.Applicative.Applicative m => a -> m a`.
-          info.type <#>
+          info."type" <#>
             \(unconstrainedType :: Type) ->
             let
               -- First, we get a list of nested `forall` quantifiers for `unconstrainedType`
