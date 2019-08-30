@@ -8,6 +8,7 @@
     , "argonaut-core"
     , "argonaut-generic"
     , "arrays"
+    , "bower-json"
     , "console"
     , "control"
     , "coroutines"

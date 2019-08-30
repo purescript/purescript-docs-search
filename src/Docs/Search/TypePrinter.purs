@@ -115,11 +115,11 @@ showForAll ty =
   keyword "forall" <>
 
   ( Array.fold $ foralls.binders <#>
-    \ { var, mbKind } ->
+    \ { name, mbKind } ->
     case mbKind of
-      Nothing -> " " <> var
+      Nothing -> " " <> name
       Just kind ->
-        " (" <> var <> " "
+        " (" <> name <> " "
         <> syntax "::"
         <> space
         <> showKind kind

@@ -402,14 +402,14 @@ tagged tag contents =
 
 joinForAlls
   :: Type
-  -> { binders :: List { var :: String
+  -> { binders :: List { name :: String
                        , mbKind :: Maybe Kind }
      , ty :: Type
      }
 joinForAlls ty = go Nil ty
   where
-    go acc (ForAll var mbKind ty') =
-      go ({ var, mbKind } : acc) ty'
+    go acc (ForAll name mbKind ty') =
+      go ({ name, mbKind } : acc) ty'
     go acc ty' = { binders: acc, ty: ty' }
 
 joinRows :: Type -> { rows :: List { row :: String

@@ -7,8 +7,8 @@ import Docs.Search.App.SearchField (SearchFieldMessage(..))
 import Docs.Search.Config (config)
 import Docs.Search.Declarations (DeclLevel(..), declLevelToHashAnchor)
 import Docs.Search.DocsJson (DataDeclType(..))
-import Docs.Search.Extra ((>#>))
-import Docs.Search.SearchResult (ResultInfo(..), SearchResult)
+import Docs.Search.Extra ((>#>), homePageFromRepository)
+import Docs.Search.SearchResult (ResultInfo(..), SearchResult(..))
 import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), Kind(..), QualifiedName(..), Type(..), TypeArgument(..), joinForAlls, joinRows)
 import Docs.Search.Engine as SearchEngine
 import Docs.Search.Engine (ResultsType(..))
@@ -17,7 +17,7 @@ import Data.Array ((!!))
 import Data.Array as Array
 import Data.List as List
 import Data.Maybe (Maybe(..), isJust)
-import Data.Newtype (unwrap, wrap)
+import Data.Newtype (wrap)
 import Data.String.CodeUnits (stripSuffix) as String
 import Data.String.Common (null, trim) as String
 import Data.String.Pattern (Pattern(..)) as String
@@ -34,9 +34,11 @@ import Web.HTML as HTML
 import Web.HTML.Location as Location
 import Web.HTML.Window as Window
 
+
 data Mode = Off | Loading | Active
 
 derive instance eqMode :: Eq Mode
+
 
 type State = { searchEngineState :: SearchEngine.State
              , results :: Array SearchResult
@@ -48,12 +50,15 @@ type State = { searchEngineState :: SearchEngine.State
              , markdownIt :: MD.MarkdownIt
              }
 
+
 data Query a
   = MessageFromSearchField SearchFieldMessage a
+
 
 data Action
   = SearchResultClicked String
   | MoreResultsRequested
+
 
 mkComponent
   :: forall o i
@@ -75,6 +80,7 @@ mkComponent contents markdownIt =
     , eval: H.mkEval $ H.defaultEval { handleQuery = handleQuery
                                      , handleAction = handleAction }
     }
+
 
 handleQuery
   :: forall o a
@@ -112,6 +118,7 @@ handleQuery (MessageFromSearchField (InputUpdated input_) next) = do
 
   pure Nothing
 
+
 handleAction
  :: forall o
  .  Action
@@ -135,6 +142,7 @@ handleAction = case _ of
       showPageContents
       H.modify_ (_ { input = "", mode = Off })
 
+
 -- | Inverse of `hidePageContents`
 showPageContents
   :: forall o
@@ -144,6 +152,7 @@ showPageContents = do
   H.liftEffect do
     Element.removeAttribute "style" state.contents
 
+
 -- | When search UI is active, we want to hide the main page contents.
 hidePageContents
   :: forall o
@@ -152,6 +161,7 @@ hidePageContents = do
   state <- H.get
   H.liftEffect do
     Element.setAttribute "style" "display: none" state.contents
+
 
 render
   :: forall m
@@ -171,6 +181,7 @@ render state@{ mode: Active, results: [] } =
     , HH.text " did not yield any results."
     ]
   ]
+
 render state@{ mode: Active } =
   renderContainer $
   [ HH.h1_ [ HH.text "Search results" ]
@@ -199,11 +210,13 @@ render state@{ mode: Active } =
   where
     shownResults = Array.take state.resultsCount state.results
 
+
 renderContainer :: forall a b. Array (HH.HTML b a) -> HH.HTML b a
 renderContainer =
   HH.div [ HP.classes [ wrap "container", wrap "clearfix" ] ] <<<
   pure <<<
   HH.div [ HP.classes [ wrap "col", wrap "col--main" ] ]
+
 
 renderSummary
   :: forall a b
@@ -212,12 +225,13 @@ renderSummary
 renderSummary text =
   HH.div_ [ HH.text text ]
 
+
 renderResult
   :: forall a
   .  MD.MarkdownIt
   -> SearchResult
   -> Array (HH.HTML a Action)
-renderResult markdownIt = unwrap >>> \result ->
+renderResult markdownIt (SearchResult result) =
   -- class names here and below are from Pursuit.
   [ HH.div [ HP.class_ (wrap "result") ]
     [ HH.h3 [ HP.class_ (wrap "result__title") ]
@@ -260,6 +274,31 @@ renderResult markdownIt = unwrap >>> \result ->
     ]
   ]
 
+renderResult _markdownIt (PackageResult { name, description, repository }) =
+  [ HH.div [ HP.class_ (wrap "result") ]
+    [ HH.h3 [ HP.class_ (wrap "result__title") ]
+      [ HH.span [ HP.classes [ wrap "result__badge"
+                             , wrap "badge"
+                             , wrap "badge--package" ]
+                , HP.title "Package"
+                ]
+        [ HH.text "P" ]
+
+      , HH.a [ HP.class_ (wrap "result__link")
+             , HP.href $ homePageFromRepository repository
+             ]
+        [ HH.text name ]
+      ]
+    ]
+  ] <> (
+    description >#>
+    \descriptionText ->
+    [ HH.div [ HP.class_ (wrap "result__body") ]
+      [ HH.text descriptionText ]
+    ]
+  )
+
+
 renderResultType
   :: forall a rest
   .  { info :: ResultInfo
@@ -269,6 +308,7 @@ renderResultType
      }
  -> Array (HH.HTML a Action)
 renderResultType result =
+
   case result.info of
     ValueResult { type: ty } ->
       wrapSignature $ renderValueSignature result ty
@@ -285,9 +325,11 @@ renderResultType result =
     TypeSynonymResult info ->
       wrapSignature $ renderTypeSynonymSignature info result
     _ -> []
+
   where
     wrapSignature signature =
       [ HH.pre [ HP.class_ (wrap "result__signature") ] [ HH.code_ signature ] ]
+
 
 renderValueSignature
   :: forall a rest
@@ -303,6 +345,7 @@ renderValueSignature result ty =
     [ HH.text result.name ]
   , HH.text " :: "
   , renderType ty ]
+
 
 renderTypeClassSignature
   :: forall a rest
@@ -341,6 +384,7 @@ renderTypeClassSignature { fundeps, arguments, superclasses } { name, moduleName
     renderFunDeps fundeps
   )
 
+
 renderFunDeps :: forall a. FunDeps -> Array (HH.HTML a Action)
 renderFunDeps (FunDeps []) = []
 renderFunDeps (FunDeps deps) =
@@ -353,19 +397,22 @@ renderFunDeps (FunDeps deps) =
       [ syntax " -> " ] <>
       Array.intercalate [ space ] (pure <<< HH.text <$> rhs)
 
+
 -- | Insert type class name and arguments
 renderTypeClassMemberSignature
   :: forall a rest
   .  { type :: Type
      , typeClass :: QualifiedName
-     , typeClassArguments :: Array String
+     , typeClassArguments :: Array TypeArgument
      }
   -> { name :: String | rest }
   -> Array (HH.HTML a Action)
 renderTypeClassMemberSignature { type: ty, typeClass, typeClassArguments } result =
   [ HH.text result.name
   , HH.text " :: "
-  , renderType ty ]
+  , renderType ty
+  ]
+
 
 renderDataSignature
   :: forall a rest
@@ -385,6 +432,7 @@ renderDataSignature { typeArguments, dataDeclType } { name } =
     Array.intercalate [ space ] $
       typeArguments <#> renderTypeArgument
   ]
+
 
 renderTypeSynonymSignature
   :: forall a rest
@@ -407,6 +455,7 @@ renderTypeSynonymSignature { type: ty, arguments } { name } =
   , renderType ty
   ]
 
+
 renderTypeArgument :: forall a. TypeArgument -> Array (HH.HTML a Action)
 renderTypeArgument (TypeArgument { name, mbKind }) =
   case mbKind of
@@ -419,6 +468,7 @@ renderTypeArgument (TypeArgument { name, mbKind }) =
       , renderKind kind
       , HH.text ")"
       ]
+
 
 renderType
   :: forall a
@@ -479,6 +529,7 @@ renderType = case _ of
     , HH.text ")"
     ]
 
+
 renderForAll
   :: forall a
   .  Type
@@ -489,11 +540,11 @@ renderForAll ty =
   [ keyword "forall" ] <>
 
   ( Array.fromFoldable foralls.binders <#>
-    \ { var, mbKind } ->
+    \ { name, mbKind } ->
     case mbKind of
-      Nothing -> HH.text (" " <> var)
+      Nothing -> HH.text (" " <> name)
       Just kind ->
-        HH.span_ [ HH.text $ " (" <> var <> " "
+        HH.span_ [ HH.text $ " (" <> name <> " "
                  , syntax "::"
                  , space
                  , renderKind kind
@@ -504,6 +555,7 @@ renderForAll ty =
 
   where
     foralls = joinForAlls ty
+
 
 renderRow
   :: forall a
@@ -535,6 +587,7 @@ renderRow asRow =
       opening = if asRow then "( " else "{ "
       closing = if asRow then " )" else " }"
 
+
 renderConstraint
   :: forall a
   .  Constraint
@@ -543,6 +596,7 @@ renderConstraint (Constraint { constraintClass, constraintArgs }) =
   HH.span_ $
   [ renderQualifiedName false TypeLevel constraintClass, space ] <>
   Array.intercalate [ space ] (constraintArgs <#> \ty -> [ renderType ty ])
+
 
 renderQualifiedName
   :: forall a
@@ -563,6 +617,7 @@ renderQualifiedName isInfix level (QualifiedName { moduleName, name })
         moduleNameString = Array.intercalate "." moduleName
         isBuiltIn = moduleName !! 0 == Just "Prim"
 
+
 renderKind
   :: forall a
   .  Kind
@@ -571,6 +626,7 @@ renderKind = case _ of
   Row k1          -> HH.span_ [ HH.text "# ", renderKind k1 ]
   FunKind k1 k2   -> HH.span_ [ renderKind k1, syntax " -> ", renderKind k2 ]
   NamedKind qname -> renderQualifiedName false KindLevel qname
+
 
 -- | Construct a `href` property value w.r.t. `DeclLevel`.
 makeHref
@@ -586,17 +642,20 @@ makeHref level isInfix moduleName name =
   declLevelToHashAnchor level <> ":" <>
   if isInfix then "type (" <> name <> ")" else name
 
+
 keyword
   :: forall a
   .  String
   -> HH.HTML a Action
 keyword str = HH.span [ HP.class_ (wrap "keyword") ] [ HH.text str ]
 
+
 syntax
   :: forall a
   .  String
   -> HH.HTML a Action
 syntax str = HH.span [ HP.class_ (wrap "syntax") ] [ HH.text str ]
+
 
 space :: forall a b. HH.HTML a b
 space = HH.text " "

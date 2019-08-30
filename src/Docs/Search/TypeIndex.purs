@@ -5,7 +5,7 @@ import Prelude
 import Docs.Search.Config (config)
 import Docs.Search.Declarations (resultsForDeclaration)
 import Docs.Search.DocsJson (DocsJson(..))
-import Docs.Search.SearchResult (ResultInfo(..), SearchResult)
+import Docs.Search.SearchResult (ResultInfo(..), SearchResult(..))
 import Docs.Search.TypeDecoder (Type)
 import Docs.Search.TypeQuery (TypeQuery)
 import Docs.Search.TypeShape (shapeOfType, shapeOfTypeQuery, stringifyShape)
@@ -49,8 +49,8 @@ resultsWithTypes :: DocsJson -> Array SearchResult
 resultsWithTypes docsJson = Array.filter (getType >>> isJust) $ allResults docsJson
 
 getType :: SearchResult -> Maybe Type
-getType sr =
-  case (unwrap sr).info of
+getType (SearchResult { info }) =
+  case info of
     ValueResult dict ->
       Just dict.type
 
@@ -61,6 +61,7 @@ getType sr =
       Just dict.type
 
     _ -> Nothing
+getType _ = Nothing
 
 lookup
   :: String

@@ -1,6 +1,7 @@
 module Docs.Search.SearchResult where
 
 import Docs.Search.DocsJson (DataDeclType)
+import Docs.Search.Extra (homePageFromRepository)
 import Docs.Search.TypeDecoder (Constraint, FunDeps, Kind, QualifiedName, Type, TypeArgument)
 
 import Data.Argonaut.Decode (class DecodeJson)
@@ -9,7 +10,7 @@ import Data.Argonaut.Encode (class EncodeJson)
 import Data.Argonaut.Encode.Generic.Rep (genericEncodeJson)
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe(..))
-import Data.Newtype (class Newtype)
+
 
 -- | Metadata that makes sense only for certain types of search results.
 data ResultInfo
@@ -21,7 +22,7 @@ data ResultInfo
   | DataConstructorResult { arguments :: Array Type }
   | TypeClassMemberResult { type :: Type
                           , typeClass :: QualifiedName
-                          , typeClassArguments :: Array String }
+                          , typeClassArguments :: Array TypeArgument }
   | TypeClassResult       { fundeps :: FunDeps
                           , arguments :: Array TypeArgument
                           , superclasses :: Array Constraint }
@@ -49,20 +50,25 @@ typeOf (ValueResult { type: res }) =
 typeOf _ = Nothing
 
 -- | Common metadata for all types of search results.
-newtype SearchResult
-  = SearchResult { name :: String
-                 , comments :: Maybe String
-                 , hashAnchor :: String
-                 , moduleName :: String
-                 , packageName :: String
-                 , sourceSpan :: Maybe { start :: Array Int
-                                       , end :: Array Int
-                                       , name :: String
-                                       }
-                 , info :: ResultInfo
-                 }
+data SearchResult
+  = SearchResult
+    { name :: String
+    , comments :: Maybe String
+    , hashAnchor :: String
+    , moduleName :: String
+    , packageName :: String
+    , sourceSpan :: Maybe { start :: Array Int
+                          , end :: Array Int
+                          , name :: String
+                          }
+    , info :: ResultInfo
+    }
+  | PackageResult
+    { name :: String
+    , description :: Maybe String
+    , repository :: String
+    }
 
-derive instance newtypeSearchResult :: Newtype SearchResult _
 derive instance genericSearchResult :: Generic SearchResult _
 
 instance encodeJsonSearchResult :: EncodeJson SearchResult where
@@ -70,3 +76,7 @@ instance encodeJsonSearchResult :: EncodeJson SearchResult where
 
 instance decodeJsonSearchResult :: DecodeJson SearchResult where
   decodeJson = genericDecodeJson
+
+typeOfResult :: SearchResult -> Maybe Type
+typeOfResult (SearchResult { info }) = typeOf info
+typeOfResult _ = Nothing

@@ -4,7 +4,7 @@ import Prelude
 
 import Docs.Search.SearchResult (ResultInfo(..), SearchResult(..))
 import Docs.Search.DocsJson (ChildDeclType(..), ChildDeclaration(..), DeclType(..), Declaration(..), DocsJson(..))
-import Docs.Search.TypeDecoder (Constraint(..), QualifiedName(..), Type(..), Kind (..), joinForAlls)
+import Docs.Search.TypeDecoder (Constraint(..), QualifiedName(..), Type(..), Kind, joinForAlls)
 
 import Control.Alt ((<|>))
 import Data.Array ((!!))
@@ -220,60 +220,64 @@ mkChildInfo
   :: SearchResult
   -> ChildDeclaration
   -> Maybe ResultInfo
-mkChildInfo parentResult (ChildDeclaration { info } ) =
-  case info.declType of
-    ChildDeclDataConstructor ->
-      info.arguments <#>
-      \arguments -> DataConstructorResult { arguments }
-    ChildDeclTypeClassMember ->
-      case (unwrap parentResult).info of
-        TypeClassResult { arguments } ->
-          -- We need to reconstruct a "real" type of a type class member.
-          -- For example, if `unconstrainedType` is the type of `pure`, i.e. `forall a. a -> m a`,
-          -- `restoredType` should be `forall m a. Control.Applicative.Applicative m => a -> m a`.
-          info."type" <#>
-            \(unconstrainedType :: Type) ->
-            let
-              -- First, we get a list of nested `forall` quantifiers for `unconstrainedType`
-              -- and a version of `unconstrainedType` without them (`ty`).
-              { ty, binders } = joinForAlls unconstrainedType
+mkChildInfo
+  (SearchResult { info: parentInfo, moduleName, name: resultName })
+  (ChildDeclaration { info } )
 
-              -- Then we construct a qualified name of the type class.
-              constraintClass =
-                QualifiedName { moduleName:
-                                String.split (wrap ".")
-                                (unwrap parentResult).moduleName
-                              , name: (unwrap parentResult).name }
+  | ChildDeclDataConstructor <- info.declType =
+      info.arguments <#> \arguments -> DataConstructorResult { arguments }
 
-              typeClassArguments = arguments <#> unwrap >>> _.name
+  | ChildDeclTypeClassMember <- info.declType
+  , TypeClassResult { arguments } <- parentInfo =
+    -- We need to reconstruct a "real" type of a type class member.
+    -- For example, if `unconstrainedType` is the type of `pure`, i.e.
+    -- `forall a. a -> m a`, then `restoredType` should be:
+    -- `forall m a. Control.Applicative.Applicative m => a -> m a`.
 
-              -- We concatenate two lists:
-              -- * list of type parameters of the type class, and
-              -- * list of quantified variables of the unconstrained type
-              allArguments :: Array { var :: String, mbKind :: Maybe Kind }
-              allArguments =
-                (typeClassArguments <#> \var -> { var, mbKind: Nothing }) <>
-                (List.toUnfoldable binders)
+    info."type" <#>
+    \(unconstrainedType :: Type) ->
+      let
+        -- First, we get a list of nested `forall` quantifiers for
+        -- `unconstrainedType`  and a version of `unconstrainedType` without
+        -- them (`ty`).
+        ({ ty, binders }) = joinForAlls unconstrainedType
 
-              restoreType :: Type -> Type
-              restoreType =
-                foldr
-                  (\arg -> compose (\type'' -> ForAll arg.var arg.mbKind type''))
-                  identity allArguments
+        -- Then we construct a qualified name of the type class.
+        constraintClass =
+          QualifiedName { moduleName: String.split (wrap ".") moduleName
+                        , name: resultName }
 
-              -- Finally, we have a restored type. It allows us to search for type members the same way
-              -- we search for functions. And types of class member results appear with the correct
-              -- class constraints.
-              restoredType = restoreType $
-                ConstrainedType (Constraint { constraintClass
-                                            , constraintArgs: typeClassArguments <#> TypeVar
-                                            }) ty
+        -- We concatenate two lists:
+        -- * a list of type parameters of the type class, and
+        -- * a list of quantified variables of the unconstrained type
+        allArguments :: Array { name :: String, mbKind :: Maybe Kind }
+        allArguments =
+          (arguments <#> unwrap) <> List.toUnfoldable binders
 
-            in TypeClassMemberResult
-               { type: restoredType
-               , typeClass: constraintClass
-               , typeClassArguments
-               }
+        restoreType :: Type -> Type
+        restoreType =
+          foldr
+            (\({ name, mbKind }) -> compose (\type'' -> ForAll name mbKind type''))
+            identity
+            allArguments
 
-        _ -> Nothing
-    ChildDeclInstance -> Nothing
+        -- Finally, we have a restored type. It allows us to search for
+        -- type members the same way we search for functions. And types
+        -- of class member results appear with the correct
+        -- class constraints.
+        restoredType =
+          restoreType $
+          ConstrainedType
+          (Constraint { constraintClass
+                      , constraintArgs: arguments <#> unwrap >>> (_.name) >>> TypeVar
+                      }) ty
+
+      in TypeClassMemberResult
+         { type: restoredType
+         , typeClass: constraintClass
+         , typeClassArguments: arguments
+         }
+
+  | otherwise = Nothing
+
+mkChildInfo _ _ = Nothing
