@@ -4,7 +4,7 @@ import Prelude
 
 import Docs.Search.SearchResult (ResultInfo(..), SearchResult(..))
 import Docs.Search.DocsJson (ChildDeclType(..), ChildDeclaration(..), DeclType(..), Declaration(..), DocsJson(..))
-import Docs.Search.TypeDecoder (Constraint(..), QualifiedName(..), Type(..), joinForAlls)
+import Docs.Search.TypeDecoder (Constraint(..), QualifiedName(..), Type(..), Kind (..), joinForAlls)
 
 import Control.Alt ((<|>))
 import Data.Array ((!!))
@@ -250,14 +250,15 @@ mkChildInfo parentResult (ChildDeclaration { info } ) =
               -- We concatenate two lists:
               -- * list of type parameters of the type class, and
               -- * list of quantified variables of the unconstrained type
-              allArguments :: Array String
+              allArguments :: Array { var :: String, mbKind :: Maybe Kind }
               allArguments =
-                typeClassArguments <> (List.toUnfoldable binders <#> (_.var))
+                (typeClassArguments <#> \var -> { var, mbKind: Nothing }) <>
+                (List.toUnfoldable binders)
 
               restoreType :: Type -> Type
               restoreType =
                 foldr
-                  (\arg -> compose (\type'' -> ForAll arg type'' Nothing))
+                  (\arg -> compose (\type'' -> ForAll arg.var arg.mbKind type''))
                   identity allArguments
 
               -- Finally, we have a restored type. It allows us to search for type members the same way

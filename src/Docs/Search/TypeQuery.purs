@@ -199,7 +199,7 @@ unify query type_ = go Nil (List.singleton { q: query, t: type_ })
         go acc ({ q, t } : rest)
 
     -- * ForAll
-    go acc ({ q, t: ForAll _ t _ } : rest) =
+    go acc ({ q, t: ForAll _ _ t } : rest) =
         go acc ({ q, t } : rest)
     go acc ({ q: (QForAll _ q), t } : rest) =
         go acc ({ q, t } : rest)
@@ -399,7 +399,7 @@ typeSize = go 0 <<< List.singleton
       go (n + 1) (t1 : t2 : rest)
     go n (TypeApp q1 q2 : rest) =
       go (n + 1) (q1 : q2 : rest)
-    go n (ForAll _ t _ : rest) =
+    go n (ForAll _ _ t : rest) =
       go (n + 1) (t : rest)
     go n (ConstrainedType _ t : rest) =
       go (n + 1) (t : rest)

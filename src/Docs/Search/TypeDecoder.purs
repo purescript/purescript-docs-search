@@ -2,6 +2,7 @@ module Docs.Search.TypeDecoder where
 
 import Prelude
 
+import Control.Alt ((<|>))
 import Data.Argonaut.Core (Json, caseJsonObject, fromArray, fromObject, jsonEmptyObject, stringify, toArray)
 import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.:))
 import Data.Argonaut.Encode (class EncodeJson, encodeJson)
@@ -138,7 +139,7 @@ data Type
   -- | A type application
   | TypeApp Type Type
   -- | Forall quantifier
-  | ForAll String Type (Maybe Kind)
+  | ForAll String (Maybe Kind) Type
   -- | A type withset of type class constraints
   | ConstrainedType Constraint Type
   {-
@@ -179,7 +180,20 @@ instance decodeJsonType :: DecodeJson Type where
         decodeContents (decodeTuple TypeApp (const err)) (Left err) json
         where err = mkJsonError' "TypeApp" json
       "ForAll" ->
-        decodeContents (decodeTriple ForAll err) (Left $ err unit) json
+        decodeContents
+        (decodeTriple
+         (\(v :: String) (t :: Type) (_ :: Maybe Int) ->
+           ForAll v Nothing t) err)
+        (Left $ err unit)
+        json
+        <|>
+        decodeContents
+        (decodeQuadriple
+         (\f (k :: Kind) a (_ :: Maybe Int) ->
+           ForAll f (Just k) a)
+         err)
+        (Left $ err unit)
+        json
         where err = mkJsonError "ForAll" json
       "ConstrainedType" ->
         decodeContents (decodeTuple ConstrainedType err) (Left $ err unit) json
@@ -305,6 +319,28 @@ decodeTriple cont err json =
       pure $ cont fst sec trd
     _ -> Left $ err unit
 
+-- | Decode a heterogeneous quadriple.
+decodeQuadriple
+  :: forall fst sec trd frt res
+  .  DecodeJson fst
+  => DecodeJson sec
+  => DecodeJson trd
+  => DecodeJson frt
+  => (fst -> sec -> trd -> frt -> res)
+  -> (forall a. a -> String)
+  -> Json
+  -> Either String res
+decodeQuadriple cont err json =
+  case toArray json of
+    Just [ json1, json2, json3, json4 ] -> do
+      fst <- decodeJson json1
+      sec <- decodeJson json2
+      trd <- decodeJson json3
+      frt <- decodeJson json4
+      pure $ cont fst sec trd frt
+    _ -> Left $ err unit
+
+
 -- | Decode a `.contents` property.
 decodeContents :: forall r. (Json -> r) -> r -> Json -> r
 decodeContents go err json =
@@ -354,7 +390,7 @@ joinForAlls
      }
 joinForAlls ty = go Nil ty
   where
-    go acc (ForAll var ty' mbKind) =
+    go acc (ForAll var mbKind ty') =
       go ({ var, mbKind } : acc) ty'
     go acc ty' = { binders: acc, ty: ty' }
 
