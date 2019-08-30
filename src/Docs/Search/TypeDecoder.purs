@@ -84,11 +84,11 @@ instance decodeJsonKind :: DecodeJson Kind where
 instance encodeJsonKind :: EncodeJson Kind where
   encodeJson = case _ of
     Row k ->
-      encodeTaggedContents "Row" (encodeJson k)
+      tagged "Row" (encodeJson k)
     FunKind k1 k2 ->
-      encodeTaggedContents "FunKind" (encodeTuple k1 k2)
+      tagged "FunKind" (encodeTuple k1 k2)
     NamedKind qname ->
-      encodeTaggedContents "NamedKind" (encodeJson qname)
+      tagged "NamedKind" (encodeJson qname)
 
 -- | A typeclass constraint
 newtype Constraint = Constraint
@@ -214,19 +214,23 @@ instance decodeJsonType :: DecodeJson Type where
 
 instance encodeJsonType :: EncodeJson Type where
   encodeJson = case _ of
-    TypeVar         val -> encodeTaggedContents "TypeVar"         (encodeJson val)
-    TypeLevelString val -> encodeTaggedContents "TypeLevelString" (encodeJson val)
-    TypeConstructor val -> encodeTaggedContents "TypeConstructor" (encodeJson val)
-    TypeOp          val -> encodeTaggedContents "TypeOp"          (encodeJson val)
-    TypeApp t1 t2       -> encodeTaggedContents "TypeApp"         (encodeTuple t1 t2)
-    ForAll str ty mbk   -> encodeTaggedContents "ForAll"          (encodeTriple str ty mbk)
-    ConstrainedType c t -> encodeTaggedContents "ConstrainedType" (encodeTuple c t)
-    REmpty              -> encodeTaggedContents "REmpty"          jsonEmptyObject
-    RCons s t1 t2       -> encodeTaggedContents "RCons"           (encodeTriple s t1 t2)
+    TypeVar         val    -> tagged "TypeVar"         (encodeJson val)
+    TypeLevelString val    -> tagged "TypeLevelString" (encodeJson val)
+    TypeConstructor val    -> tagged "TypeConstructor" (encodeJson val)
+    TypeOp          val    -> tagged "TypeOp"          (encodeJson val)
+    TypeApp t1 t2          -> tagged "TypeApp"         (encodeTuple t1 t2)
+    ForAll str Nothing ty  -> tagged "ForAll"          (encodeTriple str ty emptySkolemScope)
+    ForAll str (Just k) ty -> tagged "ForAll"          (encodeQuadriple str k ty emptySkolemScope)
+    ConstrainedType c t    -> tagged "ConstrainedType" (encodeTuple c t)
+    REmpty                 -> tagged "REmpty"          jsonEmptyObject
+    RCons s t1 t2          -> tagged "RCons"           (encodeTriple s t1 t2)
+    ParensInType t         -> tagged "ParensInType"    (encodeJson t)
+    TypeWildcard           -> tagged "TypeWildcard"    jsonEmptyObject
     BinaryNoParensType t1 t2 t3 ->
-      encodeTaggedContents "BinaryNoParensType" (encodeTriple t1 t2 t3)
-    ParensInType t      -> encodeTaggedContents "ParensInType"    (encodeJson t)
-    TypeWildcard        -> encodeTaggedContents "TypeWildcard"    jsonEmptyObject
+                              tagged "BinaryNoParensType" (encodeTriple t1 t2 t3)
+
+emptySkolemScope :: Maybe Int
+emptySkolemScope = Nothing
 
 newtype FunDep
   = FunDep
@@ -374,8 +378,22 @@ encodeTriple
 encodeTriple fst sec trd =
   fromArray [ encodeJson fst, encodeJson sec, encodeJson trd ]
 
-encodeTaggedContents :: String -> Json -> Json
-encodeTaggedContents tag contents =
+encodeQuadriple
+  :: forall fst sec trd frt
+  .  EncodeJson fst
+  => EncodeJson sec
+  => EncodeJson trd
+  => EncodeJson frt
+  => fst
+  -> sec
+  -> trd
+  -> frt
+  -> Json
+encodeQuadriple fst sec trd frt =
+  fromArray [ encodeJson fst, encodeJson sec, encodeJson trd, encodeJson frt ]
+
+tagged :: String -> Json -> Json
+tagged tag contents =
   fromObject $ Object.fromFoldable
   [ Tuple "tag" (encodeJson tag)
   , Tuple "contents" contents
