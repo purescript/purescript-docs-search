@@ -88,9 +88,7 @@ run' cfg = do
            <*> parallel (if cfg.noPatch
                          then pure unit
                          else patchDocs cfg)
-           <*> parallel (if cfg.noPatch
-                         then pure unit
-                         else copyAppFile cfg)
+           <*> parallel (copyAppFile cfg)
 
   let countOfDefinitions = Trie.size $ unwrap index
       countOfTypeDefinitions =
