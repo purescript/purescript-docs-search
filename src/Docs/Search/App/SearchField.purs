@@ -122,7 +122,7 @@ handleAction = case _ of
 clearInput :: H.HalogenM State Action () SearchFieldMessage Aff Unit
 clearInput = do
   H.modify_ (_ { input = "" })
-  H.liftEffect URIHash.clearInput
+  H.liftEffect URIHash.removeHash
   H.raise InputCleared
 
 withSearchField :: (HTML.HTMLInputElement -> Effect Unit) -> Effect Unit
