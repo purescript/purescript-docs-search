@@ -87,7 +87,7 @@ resultsForDeclaration
 resultsForDeclaration scores moduleName indexEntry@(Declaration entry) =
   let { info, title, sourceSpan, comments, children } = entry
       { name, declLevel } = getLevelAndName info.declType title
-      packageName = extractPackageName sourceSpan.name
+      packageName = fromMaybe "builtins" $ map (extractPackageName <<< _.name) sourceSpan
   in case mkInfo declLevel indexEntry of
        Nothing -> mempty
        Just info' ->
@@ -95,7 +95,7 @@ resultsForDeclaration scores moduleName indexEntry@(Declaration entry) =
                                    , comments
                                    , hashAnchor: declLevelToHashAnchor declLevel
                                    , moduleName
-                                   , sourceSpan: Just sourceSpan
+                                   , sourceSpan
                                    , packageName
                                    , score: fromMaybe 0 $ Map.lookup packageName scores
                                    , info: info'

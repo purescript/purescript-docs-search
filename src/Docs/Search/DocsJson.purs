@@ -46,10 +46,10 @@ newtype Declaration
                          , arguments     :: Maybe (Array TypeArgument)
                          , fundeps       :: Maybe FunDeps
                          }
-               , sourceSpan :: { start :: Array Int
-                               , end :: Array Int
-                               , name :: String
-                               }
+               , sourceSpan :: Maybe { start :: Array Int
+                                     , end :: Array Int
+                                     , name :: String
+                                     }
                , children :: Array ChildDeclaration
                }
 
