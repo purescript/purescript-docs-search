@@ -16,7 +16,7 @@ import Data.List as List
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype, unwrap, wrap)
 import Data.Search.Trie (Trie, alter)
-import Data.String.CodeUnits (stripPrefix, stripSuffix, toCharArray)
+import Data.String.CodeUnits (stripPrefix, stripSuffix, toCharArray, indexOf)
 import Data.String.Common (split) as String
 import Data.String.Common (toLower)
 import Data.String.Pattern (Pattern(..))
@@ -87,7 +87,7 @@ resultsForDeclaration
 resultsForDeclaration scores moduleName indexEntry@(Declaration entry) =
   let { info, title, sourceSpan, comments, children } = entry
       { name, declLevel } = getLevelAndName info.declType title
-      packageName = extractPackageName sourceSpan
+      packageName = extractPackageName moduleName sourceSpan
   in case mkInfo declLevel indexEntry of
        Nothing -> mempty
        Just info' ->
@@ -189,10 +189,13 @@ getLevelAndName DeclExternKind  name = { name, declLevel: KindLevel }
 
 
 -- | Extract package name from `sourceSpan.name`, which contains path to
--- | the source file.
-extractPackageName :: Maybe SourceSpan -> String
-extractPackageName Nothing = "<builtin>"
-extractPackageName (Just { name }) =
+-- | the source file. If `ModuleName` string starts with `Prim.`, it's a
+-- | built-in (guaranteed by the compiler).
+extractPackageName :: ModuleName -> Maybe SourceSpan -> String
+extractPackageName moduleName _
+  | indexOf (Pattern "Prim.") moduleName == Just 0 = "<builtin>"
+extractPackageName _ Nothing = "<unknown>"
+extractPackageName _ (Just { name }) =
   let dirs = String.split (Pattern "/") name
   in
     fromMaybe "<local package>" do
