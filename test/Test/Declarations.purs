@@ -16,12 +16,13 @@ tests = do
       Assert.equal "<builtin>" (extractPackageName "Prim.Foo" Nothing)
       Assert.equal "<builtin>" (extractPackageName "Prim.Foo.Bar" Nothing)
       Assert.equal "<unknown>" (extractPackageName "Primitive" Nothing)
-      Assert.equal "foo" (extractPackageName "Foo" $
-                    Just { start: []
-                         , end: []
-                         , name: ".spago/foo/src/Foo.purs"
-                         }
-                   )
+      Assert.equal "foo"
+        (extractPackageName "Foo" $
+         Just { start: []
+              , end: []
+              , name: ".spago/foo/src/Foo.purs"
+              }
+        )
       Assert.equal "bar"
         (extractPackageName "Bar" $
          Just { start: []
