@@ -16,7 +16,7 @@ import Data.List as List
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (class Newtype, unwrap, wrap)
 import Data.Search.Trie (Trie, alter)
-import Data.String.CodeUnits (stripPrefix, stripSuffix, toCharArray, indexOf)
+import Data.String.CodeUnits (stripPrefix, stripSuffix, toCharArray)
 import Data.String.Common (split) as String
 import Data.String.Common (toLower)
 import Data.String.Pattern (Pattern(..))
@@ -193,7 +193,7 @@ getLevelAndName DeclExternKind  name = { name, declLevel: KindLevel }
 -- | built-in (guaranteed by the compiler).
 extractPackageName :: ModuleName -> Maybe SourceSpan -> String
 extractPackageName moduleName _
-  | indexOf (Pattern "Prim.") moduleName == Just 0 = "<builtin>"
+  | String.split (Pattern ".") moduleName !! 0 == Just "Prim" = "<builtin>"
 extractPackageName _ Nothing = "<unknown>"
 extractPackageName _ (Just { name }) =
   let dirs = String.split (Pattern "/") name
