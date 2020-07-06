@@ -1,22 +1,19 @@
 module Docs.Search.App.Sidebar where
 
 import Docs.Search.ModuleIndex (ModuleIndex)
-import Docs.Search.Types (ModuleName)
+import Docs.Search.Types (ModuleName, PackageName)
 
 import Prelude
 import Data.Array as Array
-import Data.Lens (Setter', (.~))
+import Data.Lens ((.~))
 import Data.Lens.Record (prop)
-import Data.List (List, foldr)
+import Data.List (foldr)
+import Data.Map (Map)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
-import Data.Profunctor.Strong (first)
-import Data.Search.Trie (Trie)
-import Data.Search.Trie as Trie
 import Data.Set (Set)
 import Data.Set as Set
-import Data.String.CodeUnits (singleton, toCharArray) as String
 import Data.Symbol (SProxy(..))
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Aff (Aff)
@@ -34,7 +31,7 @@ data Mode = GroupByPackage | DontGroup
 derive instance modeEq :: Eq Mode
 
 
-type State = { expansions :: Trie Char (Set ModuleName)
+type State = { moduleIndex :: Map PackageName (Set ModuleName)
              , mode :: Mode
              , moduleNames :: Array ModuleName
              }
@@ -46,7 +43,7 @@ mkComponent
   -> H.Component HH.HTML q i o Aff
 mkComponent moduleIndex =
   H.mkComponent
-    { initialState: const { expansions
+    { initialState: const { moduleIndex
                           , mode: GroupByPackage
                           , moduleNames
                           }
@@ -55,14 +52,6 @@ mkComponent moduleIndex =
     }
     where
       moduleNames = Array.sort $ Array.fromFoldable $ foldr Set.union mempty moduleIndex
-
-      -- Convert `ModuleIndex` to the appropriate format.
-      expansions :: Trie Char (Set ModuleName)
-      expansions =
-        moduleIndex #
-        Map.toUnfoldable <#>
-        first (String.toCharArray >>> Array.toUnfoldable) #
-        Trie.fromList
 
 
 handleAction
@@ -77,7 +66,7 @@ render
   :: forall m
   .  State
   -> H.ComponentHTML Action () m
-render { expansions, mode, moduleNames } =
+render { moduleIndex, mode, moduleNames } =
 
   HH.div [ HP.classes [ wrap "col", wrap "col--aside" ] ]
 
@@ -94,9 +83,9 @@ render { expansions, mode, moduleNames } =
              ]
     [ HH.text " GROUP BY PACKAGE" ]
 
-  , if mode == GroupByPackage
-    then HH.ul_ $ renderPackageEntry <$> packageList
-    else HH.ul_ $ renderModuleName <$> moduleNames
+  , HH.ul_ $ if mode == GroupByPackage
+             then renderPackageEntry <$> packageList
+             else renderModuleName <$> moduleNames
   ]
   where
 
@@ -115,19 +104,10 @@ render { expansions, mode, moduleNames } =
       ]
 
     packageList :: Array (String /\ Set ModuleName)
-    packageList =
-      first (Array.foldMap String.singleton) <$> (
-        Trie.toUnfoldable expansions :: Array (Array Char /\ Set ModuleName)
-      )
+    packageList = Map.toUnfoldable moduleIndex
 
 
 -- Some optics:
 
 _mode :: forall a b rest.  (a -> b) -> { mode :: a | rest } -> { mode :: b | rest }
 _mode = prop (SProxy :: SProxy "mode")
-
-trieKey :: forall a. String -> Setter' (Trie Char a) a
-trieKey key f = Trie.update f path
-  where
-    path :: List Char
-    path = Array.toUnfoldable $ String.toCharArray key
