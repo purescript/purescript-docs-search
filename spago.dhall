@@ -29,6 +29,7 @@
     , "node-readline"
     , "optparse"
     , "profunctor"
+    , "profunctor-lenses"
     , "search-trie"
     , "string-parsers"
     , "strings"
