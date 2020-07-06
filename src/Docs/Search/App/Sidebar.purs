@@ -5,13 +5,13 @@ import Docs.Search.Types (ModuleName)
 
 import Prelude
 import Data.Array as Array
-import Data.Lens (Setter', _2, (%~), (.~))
+import Data.Lens (Setter', (.~))
 import Data.Lens.Record (prop)
 import Data.List (List, foldr)
 import Data.Map as Map
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
-import Data.Profunctor.Strong (first, (***))
+import Data.Profunctor.Strong (first)
 import Data.Search.Trie (Trie)
 import Data.Search.Trie as Trie
 import Data.Set (Set)
@@ -26,7 +26,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 
-data Action = ToggleCollapse String | ToggleGrouping Boolean
+data Action = ToggleGrouping Boolean
 
 
 data Mode = GroupByPackage | DontGroup
@@ -34,11 +34,7 @@ data Mode = GroupByPackage | DontGroup
 derive instance modeEq :: Eq Mode
 
 
-data PackageEntryState = Expanded | Collapsed
-
-derive instance packageEntryStateEq :: Eq PackageEntryState
-
-type State = { expansions :: Trie Char (Set ModuleName /\ PackageEntryState)
+type State = { expansions :: Trie Char (Set ModuleName)
              , mode :: Mode
              , moduleNames :: Array ModuleName
              }
@@ -61,11 +57,11 @@ mkComponent moduleIndex =
       moduleNames = Array.sort $ Array.fromFoldable $ foldr Set.union mempty moduleIndex
 
       -- Convert `ModuleIndex` to the appropriate format.
-      expansions :: Trie Char (Set ModuleName /\ PackageEntryState)
+      expansions :: Trie Char (Set ModuleName)
       expansions =
         moduleIndex #
         Map.toUnfoldable <#>
-        (String.toCharArray >>> Array.toUnfoldable) *** (_ /\ Collapsed) #
+        first (String.toCharArray >>> Array.toUnfoldable) #
         Trie.fromList
 
 
@@ -73,13 +69,6 @@ handleAction
  :: forall o
  .  Action
  -> H.HalogenM State Action () o Aff Unit
-handleAction (ToggleCollapse packageName) = do
-  H.modify_ (
-    _expansions %~ trieKey packageName %~ _2 %~
-    case _ of
-      Expanded -> Collapsed
-      Collapsed -> Expanded
-  )
 handleAction (ToggleGrouping flag) =
   H.modify_ (_mode .~ if flag then GroupByPackage else DontGroup)
 
@@ -111,19 +100,13 @@ render { expansions, mode, moduleNames } =
   ]
   where
 
-    renderPackageEntry (packageName /\ modules /\ status) =
-
-      HH.li [ HE.onClick $ const $ Just $ ToggleCollapse packageName
-            , HP.classes [ wrap $ if status == Expanded
-                                  then "li-expanded-package"
-                                  else "li-collapsed-package"
-                         , wrap "li-package" ]
-            ]
-
-      if status == Expanded
-      then [ HH.text packageName
-           , HH.ul_ $ Set.toUnfoldable modules <#> renderModuleName ]
-      else [ HH.text packageName ]
+    renderPackageEntry (packageName /\ modules) =
+      HH.li [ HP.classes [ wrap "li-package" ] ]
+      [ HH.details_
+        [ HH.summary_ [ HH.text packageName ]
+        , HH.ul_ $ Set.toUnfoldable modules <#> renderModuleName
+        ]
+      ]
 
     renderModuleName moduleName =
       HH.li_
@@ -131,17 +114,14 @@ render { expansions, mode, moduleNames } =
         [ HH.text moduleName ]
       ]
 
-    packageList :: Array (String /\ Set ModuleName /\ PackageEntryState)
+    packageList :: Array (String /\ Set ModuleName)
     packageList =
       first (Array.foldMap String.singleton) <$> (
-        Trie.toUnfoldable expansions :: Array (Array Char /\ Set ModuleName /\ PackageEntryState)
+        Trie.toUnfoldable expansions :: Array (Array Char /\ Set ModuleName)
       )
 
 
 -- Some optics:
-
-_expansions :: forall a b rest.  (a -> b) -> { expansions :: a | rest } -> { expansions :: b | rest }
-_expansions = prop (SProxy :: SProxy "expansions")
 
 _mode :: forall a b rest.  (a -> b) -> { mode :: a | rest } -> { mode :: b | rest }
 _mode = prop (SProxy :: SProxy "mode")

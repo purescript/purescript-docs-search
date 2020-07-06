@@ -121,14 +121,8 @@ insertStyle doc = do
     cursor: pointer;
     color: #c4953a;
   }
-  ul .li-collapsed-package::before {
-    content: "▸";
-  }
-  ul .li-expanded-package::before {
-    content: "▾";
-  }
   /* Make spaces narrower in the sidebar */
-  .li-expanded-package > ul {
+  .li-package > details > ul {
     margin-top: auto;
     margin-bottom: auto;
   }
@@ -140,6 +134,9 @@ insertStyle doc = do
     font-weight: 300;
     letter-spacing: 1px;
     margin-bottom: -0.8em;
+  }
+  summary:focus {
+    outline: none;
   }
   """
 
