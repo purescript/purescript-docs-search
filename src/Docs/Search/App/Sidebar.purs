@@ -24,12 +24,9 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Web.Event.Event (stopPropagation)
-import Web.UIEvent.MouseEvent (MouseEvent)
-import Web.UIEvent.MouseEvent as ME
 
 
-data Action = ToggleCollapse String | ToggleGrouping Boolean | ModuleClicked MouseEvent
+data Action = ToggleCollapse String | ToggleGrouping Boolean
 
 
 data Mode = GroupByPackage | DontGroup
@@ -73,12 +70,9 @@ mkComponent moduleIndex =
 
 
 handleAction
-  :: forall o
-  .  Action
-  -> H.HalogenM State Action () o Aff Unit
-handleAction (ModuleClicked event) = do
-  -- Do not allow the module listing to collapse before the page unloads.
-  H.liftEffect $ stopPropagation $ ME.toEvent event
+ :: forall o
+ .  Action
+ -> H.HalogenM State Action () o Aff Unit
 handleAction (ToggleCollapse packageName) = do
   H.modify_ (
     _expansions %~ trieKey packageName %~ _2 %~
@@ -133,9 +127,7 @@ render { expansions, mode, moduleNames } =
 
     renderModuleName moduleName =
       HH.li_
-      [ HH.a [ HP.href (moduleName <> ".html")
-             , HE.onClick $ Just <<< ModuleClicked
-             ]
+      [ HH.a [ HP.href (moduleName <> ".html") ]
         [ HH.text moduleName ]
       ]
 
