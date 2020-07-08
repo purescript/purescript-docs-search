@@ -36,6 +36,7 @@
     , "test-unit"
     , "web-dom"
     , "web-html"
+    , "web-storage"
     ]
 , packages =
     ./packages.dhall

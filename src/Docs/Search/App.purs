@@ -30,6 +30,7 @@ import Web.HTML.Event.HashChangeEvent.EventTypes (hashchange)
 import Web.HTML.HTMLDocument as HTMLDocument
 import Web.HTML.HTMLElement (fromElement)
 import Web.HTML.Window as Window
+import Web.HTML.Event.EventTypes (focus)
 
 
 main :: Effect Unit
@@ -66,7 +67,9 @@ main = do
             SearchResults.mkComponent initialSearchEngineState pageContents markdownIt
 
       sfio <- runUI SearchField.component unit searchField
-      sbio <- runUI (Sidebar.mkComponent moduleIndex) unit sidebarContainer
+      sbio <- do
+              component <- Sidebar.mkComponent moduleIndex
+              runUI component unit sidebarContainer
       srio <- runUI resultsComponent unit searchResults
 
       sfio.subscribe $
@@ -85,6 +88,16 @@ main = do
               sfio.query $ H.tell SearchField.ReadURIHash
 
         addEventListener hashchange listener true (Window.toEventTarget win)
+
+      -- Subscribe to window focus events
+      H.liftEffect do
+
+        listener <-
+          eventListener \event ->
+            launchAff_ do
+              sbio.query $ H.tell Sidebar.UpdateModuleGrouping
+
+        addEventListener focus listener true (Window.toEventTarget win)
 
 
 insertStyle :: Document.Document -> Effect Unit

@@ -9,6 +9,7 @@ config ::
   , mkIndexPartPath :: Int -> String
   , moduleIndexPath :: String
   , moduleIndexLoadPath :: String
+  , groupModulesItem :: String
   , packageInfoPath :: String
   , packageInfoLoadPath :: String
   , mkShapeScriptPath :: String -> String
@@ -48,6 +49,8 @@ config =
   , moduleIndexPath: "generated-docs/html/index/modules.js"
   , moduleIndexLoadPath: "./index/modules.js"
   -- ^ Used to load mode index to the browser scope.
+  , groupModulesItem: "PureScriptDocsSearchGroupModules"
+  -- ^ localStorage key to save sidebar checkbox value to.
   , packageInfoPath: "generated-docs/html/index/packages.js"
   , packageInfoLoadPath: "./index/packages.js"
   -- ^ Used to load package index to the browser scope.
