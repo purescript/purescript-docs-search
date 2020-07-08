@@ -28,17 +28,17 @@ import Web.HTML.Window as Window
 import Web.Storage.Storage as Storage
 
 
-data Action = ToggleGrouping Mode
+data Action = ToggleGrouping GroupingMode
 
 data Query a = UpdateModuleGrouping a
 
-data Mode = GroupByPackage | DontGroup
+data GroupingMode = GroupByPackage | DontGroup
 
-derive instance modeEq :: Eq Mode
+derive instance groupingModeEq :: Eq GroupingMode
 
 
 type State = { moduleIndex :: Map PackageName (Set ModuleName)
-             , mode :: Mode
+             , groupingMode :: GroupingMode
              , moduleNames :: Array ModuleName
              }
 
@@ -48,11 +48,11 @@ mkComponent
   .  ModuleIndex
   -> Aff (H.Component HH.HTML Query i Action Aff)
 mkComponent moduleIndex = do
-  mode <- H.liftEffect loadModeFromLocalStorage
+  groupingMode <- H.liftEffect loadGroupingModeFromLocalStorage
   pure $
     H.mkComponent
       { initialState: const { moduleIndex
-                            , mode
+                            , groupingMode
                             , moduleNames
                             }
       , render
@@ -68,14 +68,14 @@ handleAction
  :: forall o
  .  Action
  -> H.HalogenM State Action () o Aff Unit
-handleAction (ToggleGrouping mode) = do
-  H.modify_ (_mode .~ mode)
+handleAction (ToggleGrouping groupingMode) = do
+  H.modify_ (_groupingMode .~ groupingMode)
 
   H.liftEffect do
     window <- HTML.window
     localStorage <- Window.localStorage window
 
-    if mode == GroupByPackage
+    if groupingMode == GroupByPackage
     then Storage.setItem    config.groupModulesItem "true" localStorage
     else Storage.removeItem config.groupModulesItem        localStorage
 
@@ -85,10 +85,10 @@ handleQuery
   .  Query a
   -> H.HalogenM State i () Action Aff (Maybe a)
 handleQuery (UpdateModuleGrouping next) = do
-  oldMode <- H.get <#> _.mode
-  newMode <- H.liftEffect loadModeFromLocalStorage
-  when (oldMode /= newMode) do
-    H.modify_ (_mode .~ newMode)
+  oldGroupingMode <- H.get <#> _.groupingMode
+  newGroupingMode <- H.liftEffect loadGroupingModeFromLocalStorage
+  when (oldGroupingMode /= newGroupingMode) do
+    H.modify_ (_groupingMode .~ newGroupingMode)
   pure Nothing
 
 
@@ -96,15 +96,15 @@ render
   :: forall m
   .  State
   -> H.ComponentHTML Action () m
-render { moduleIndex, mode, moduleNames } =
+render { moduleIndex, groupingMode, moduleNames } =
 
   HH.div [ HP.classes [ wrap "col", wrap "col--aside" ] ]
 
   [ HH.h3_ [ HH.text "Modules" ]
   , HH.input [ HP.id_ "group-modules__input"
              , HP.type_ HP.InputCheckbox
-             , HP.checked (mode == GroupByPackage)
-             , HE.onChecked $ Just <<< ToggleGrouping <<< isCheckedToMode
+             , HP.checked (groupingMode == GroupByPackage)
+             , HE.onChecked $ Just <<< ToggleGrouping <<< isCheckedToGroupingMode
              ]
 
   , HH.text " "
@@ -113,7 +113,7 @@ render { moduleIndex, mode, moduleNames } =
              ]
     [ HH.text " GROUP BY PACKAGE" ]
 
-  , HH.ul_ $ if mode == GroupByPackage
+  , HH.ul_ $ if groupingMode == GroupByPackage
              then renderPackageEntry <$> packageList
              else renderModuleName <$> moduleNames
   ]
@@ -138,8 +138,8 @@ render { moduleIndex, mode, moduleNames } =
 
 
 -- | Decide whether to group modules by package in the sidebar, using localStorage.
-loadModeFromLocalStorage :: Effect Mode
-loadModeFromLocalStorage = do
+loadGroupingModeFromLocalStorage :: Effect GroupingMode
+loadGroupingModeFromLocalStorage = do
   window <- HTML.window
   localStorage <- Window.localStorage window
   mbGroupModules <- Storage.getItem config.groupModulesItem localStorage
@@ -147,11 +147,11 @@ loadModeFromLocalStorage = do
 
 
 -- | Convert checkbox status to sidebar mode
-isCheckedToMode :: Boolean -> Mode
-isCheckedToMode = if _ then GroupByPackage else DontGroup
+isCheckedToGroupingMode :: Boolean -> GroupingMode
+isCheckedToGroupingMode = if _ then GroupByPackage else DontGroup
 
 
 -- Some optics:
 
-_mode :: forall a b rest.  (a -> b) -> { mode :: a | rest } -> { mode :: b | rest }
-_mode = prop (SProxy :: SProxy "mode")
+_groupingMode :: forall a b rest.  (a -> b) -> { groupingMode :: a | rest } -> { groupingMode :: b | rest }
+_groupingMode = prop (SProxy :: SProxy "groupingMode")
