@@ -1,3 +1,4 @@
+-- | A decoder for types located in 'Language.PureScript.Types'.
 module Docs.Search.TypeDecoder where
 
 import Docs.Search.Types (Identifier)
@@ -49,49 +50,6 @@ mkJsonError name json _ =
 mkJsonError' :: String -> Json -> JsonDecodeError
 mkJsonError' name json = mkJsonError name json unit
 
--- | The data type of kinds
-data Kind
-  -- | Kinds for labelled, unordered rows without duplicates
-  = Row Kind
-  -- | Function kinds
-  | FunKind Kind Kind
-  -- | A named kind
-  | NamedKind QualifiedName
-
-derive instance eqKind :: Eq Kind
-derive instance genericKind :: Generic Kind _
-
-instance showKind :: Show Kind where
-  show x = genericShow x
-
-instance decodeJsonKind :: DecodeJson Kind where
-  decodeJson json = do
-    handle <- decodeJson json
-    tag <- handle .: "tag"
-    case tag of
-      "NamedKind" -> do
-        contents <- handle .: "contents"
-        pure $ NamedKind contents
-      "Row" -> do
-        contents <- handle .: "contents"
-        pure $ Row contents
-      "FunKind" -> do
-        contents <- handle .: "contents"
-        case contents of
-          [k1, k2] ->
-            Right $ FunKind k1 k2
-          _ -> Left $ mkJsonError' "FunKind" json
-      _ -> Left $ mkJsonError' "Kind" json
-
-instance encodeJsonKind :: EncodeJson Kind where
-  encodeJson = case _ of
-    Row k ->
-      tagged "Row" (encodeJson k)
-    FunKind k1 k2 ->
-      tagged "FunKind" (encodeTuple k1 k2)
-    NamedKind qname ->
-      tagged "NamedKind" (encodeJson qname)
-
 -- | A typeclass constraint
 newtype Constraint = Constraint
   { constraintClass :: QualifiedName
@@ -141,7 +99,7 @@ data Type
   -- | A type application
   | TypeApp Type Type
   -- | Forall quantifier
-  | ForAll String (Maybe Kind) Type
+  | ForAll String (Maybe Type) Type
   -- | A type withset of type class constraints
   | ConstrainedType Constraint Type
   {-
@@ -189,9 +147,10 @@ instance decodeJsonType :: DecodeJson Type where
         (Left $ err unit)
         json
         <|>
+        -- Ignore SkolemScope
         decodeContents
         (decodeQuadriple
-         (\f (k :: Kind) a (_ :: Maybe Int) ->
+         (\f (k :: Type) a (_ :: Maybe Int) ->
            ForAll f (Just k) a)
          err)
         (Left $ err unit)
@@ -270,7 +229,7 @@ instance encodeJsonFunDeps :: EncodeJson FunDeps where
 newtype TypeArgument
   = TypeArgument
     { name :: String
-    , mbKind :: Maybe Kind
+    , mbKind :: Maybe Type
     }
 
 derive newtype instance eqTypeArgument :: Eq TypeArgument
@@ -404,7 +363,7 @@ tagged tag contents =
 joinForAlls
   :: Type
   -> { binders :: List { name :: String
-                       , mbKind :: Maybe Kind }
+                       , mbKind :: Maybe Type }
      , ty :: Type
      }
 joinForAlls ty = go Nil ty

@@ -12,7 +12,7 @@ import Docs.Search.Extra (homePageFromRepository, (>#>))
 import Docs.Search.ModuleIndex (ModuleResult)
 import Docs.Search.PackageIndex (PackageResult)
 import Docs.Search.SearchResult (ResultInfo(..), SearchResult(..))
-import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), Kind(..), QualifiedName(..), Type(..), TypeArgument(..), joinForAlls, joinRows)
+import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), QualifiedName(..), Type(..), TypeArgument(..), joinForAlls, joinRows)
 import Docs.Search.TypeIndex (TypeIndex)
 import Docs.Search.Types (Identifier(..), ModuleName(..), PackageName)
 import Docs.Search.Meta (Meta)
@@ -510,7 +510,7 @@ renderTypeArgument (TypeArgument { name, mbKind }) =
       [ HH.text "("
       , HH.text $ name
       , HH.text " :: "
-      , renderKind kind
+      , renderType kind
       , HH.text ")"
       ]
 
@@ -592,7 +592,7 @@ renderForAll ty =
         HH.span_ [ HH.text $ " (" <> name <> " "
                  , syntax "::"
                  , space
-                 , renderKind kind
+                 , renderType kind
                  , HH.text ")" ]
   ) <>
 
@@ -674,16 +674,6 @@ renderQualifiedName isInfix level (QualifiedName { moduleNameParts, name })
       where
         moduleName = ModuleName $ Array.intercalate "." $ moduleNameParts
         isBuiltIn = moduleNameParts !! 0 == Just "Prim"
-
-
-renderKind
-  :: forall a
-  .  Kind
-  -> HH.HTML a Action
-renderKind = case _ of
-  Row k1          -> HH.span_ [ HH.text "# ", renderKind k1 ]
-  FunKind k1 k2   -> HH.span_ [ renderKind k1, syntax " -> ", renderKind k2 ]
-  NamedKind qname -> renderQualifiedName false KindLevel qname
 
 
 -- | Construct a `href` property value w.r.t. `DeclLevel`.

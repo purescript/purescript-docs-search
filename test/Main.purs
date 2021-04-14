@@ -2,7 +2,7 @@ module Test.Main where
 
 import Prelude
 
-import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), Kind(..), QualifiedName(..), Type(..))
+import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), QualifiedName(..), Type(..))
 import Docs.Search.Types (Identifier(..))
 import Test.TypeQuery as TypeQuery
 import Test.IndexBuilder as IndexBuilder
@@ -60,102 +60,6 @@ mainTest = do
                           , rhs: [ "output"]
                           }
                  ])
-
-  suite "Kind decoder" do
-
-    test "QualifiedName" do
-
-      let qualifiedName =  mkJson """
-      [
-          [
-            "Prim"
-          ],
-          "Type"
-      ]
-      """
-
-      assertRight (decodeJson qualifiedName)
-        (qualified ["Prim"] "Type")
-
-    test "NamedKind" do
-      let namedKind = mkJson """
-      {
-        "annotation": [],
-        "tag": "NamedKind",
-        "contents": [
-          [
-            "Prim"
-          ],
-          "Type"
-        ]
-      }
-      """
-
-      assertRight (decodeJson namedKind)
-        (NamedKind $ qualified ["Prim"] "Type")
-
-    test "Row" do
-      let row = mkJson """
-            {
-              "annotation": [],
-              "tag": "Row",
-              "contents": {
-                "annotation": [],
-                "tag": "NamedKind",
-                "contents": [
-                  [
-                    "Prim"
-                  ],
-                  "Type"
-                ]
-              }
-            }
-      """
-
-      assertRight (decodeJson row) (Row $ NamedKind $ qualified ["Prim"] "Type")
-
-    test "FunKind" do
-      let funKind = mkJson """
-        {
-          "annotation": [],
-          "tag": "FunKind",
-          "contents": [
-            {
-              "annotation": [],
-              "tag": "Row",
-              "contents": {
-                "annotation": [],
-                "tag": "NamedKind",
-                "contents": [
-                  [
-                    "Prim"
-                  ],
-                  "Type"
-                ]
-              }
-            },
-            {
-              "annotation": [],
-              "tag": "Row",
-              "contents": {
-                "annotation": [],
-                "tag": "NamedKind",
-                "contents": [
-                  [
-                    "Prim"
-                  ],
-                  "Type"
-                ]
-              }
-            }
-          ]
-        }
-        """
-      assertRight (decodeJson funKind)
-        (FunKind (Row $ NamedKind $ qualified ["Prim"] "Type")
-                 (Row $ NamedKind $ qualified ["Prim"] "Type")
-        )
-
 
   suite "Constraint decoder" do
     test "Constraint" do
@@ -377,155 +281,6 @@ mainTest = do
                                      (TypeConstructor $ qualified ["Prim"] "String"))
                             (TypeVar "a"))
 
-    test "ForAll #2" do
-      let forallJson = mkJson """
-{
-  "annotation": [],
-  "tag": "ForAll",
-  "contents": [
-    "f",
-    {
-      "annotation": [],
-      "tag": "FunKind",
-      "contents": [
-        {
-          "annotation": [],
-          "tag": "NamedKind",
-          "contents": [
-            [
-              "Prim",
-              "RowList"
-            ],
-            "RowList"
-          ]
-        },
-        {
-          "annotation": [],
-          "tag": "NamedKind",
-          "contents": [
-            [
-              "Prim"
-            ],
-            "Type"
-          ]
-        }
-      ]
-    },
-    {
-      "annotation": [],
-      "tag": "TypeApp",
-      "contents": [
-        {
-          "annotation": [],
-          "tag": "TypeApp",
-          "contents": [
-            {
-              "annotation": [],
-              "tag": "TypeConstructor",
-              "contents": [
-                [
-                  "Prim"
-                ],
-                "Function"
-              ]
-            },
-            {
-              "annotation": [],
-              "tag": "TypeApp",
-              "contents": [
-                {
-                  "annotation": [],
-                  "tag": "TypeVar",
-                  "contents": "f"
-                },
-                {
-                  "annotation": [],
-                  "tag": "TypeVar",
-                  "contents": "l"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "annotation": [],
-          "tag": "TypeApp",
-          "contents": [
-            {
-              "annotation": [],
-              "tag": "TypeConstructor",
-              "contents": [
-                [
-                  "Data",
-                  "List",
-                  "Types"
-                ],
-                "List"
-              ]
-            },
-            {
-              "annotation": [],
-              "tag": "ParensInType",
-              "contents": {
-                "annotation": [],
-                "tag": "TypeApp",
-                "contents": [
-                  {
-                    "annotation": [],
-                    "tag": "TypeApp",
-                    "contents": [
-                      {
-                        "annotation": [],
-                        "tag": "TypeConstructor",
-                        "contents": [
-                          [
-                            "Data",
-                            "Tuple"
-                          ],
-                          "Tuple"
-                        ]
-                      },
-                      {
-                        "annotation": [],
-                        "tag": "TypeConstructor",
-                        "contents": [
-                          [
-                            "Prim"
-                          ],
-                          "String"
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "annotation": [],
-                    "tag": "TypeConstructor",
-                    "contents": [
-                      [
-                        "Prim"
-                      ],
-                      "String"
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    null
-  ]
-}
-      """
-      assertRight (decodeJson forallJson) $
-        ForAll "f"
-        (Just (FunKind (NamedKind (QualifiedName { moduleNameParts: ["Prim","RowList"], name: Identifier "RowList" })) (NamedKind (QualifiedName { moduleNameParts: ["Prim"], name: Identifier "Type" }))))
-        (TypeApp (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Prim"], name: Identifier "Function" })) (TypeApp (TypeVar "f") (TypeVar "l"))) (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Data","List","Types"], name: Identifier "List" })) (ParensInType (TypeApp (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Data","Tuple"], name: Identifier "Tuple" })) (TypeConstructor (QualifiedName { moduleNameParts: ["Prim"], name: Identifier "String" }))) (TypeConstructor (QualifiedName { moduleNameParts: ["Prim"], name: Identifier "String" }))))))
-
-
-
-
   suite "jsons" do
 
     test "jsons #1" do
@@ -534,14 +289,6 @@ mainTest = do
       """
 
       assertRight (decodeJson json) $ (ForAll "o" Nothing (ForAll "r" Nothing (ForAll "l" Nothing (ConstrainedType (Constraint { constraintArgs: [(TypeVar "l"),(TypeVar "r"),(TypeVar "o")], constraintClass: (QualifiedName { moduleNameParts: ["Type","Data","Boolean"], name: Identifier "And" }) }) (TypeApp (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Prim"], name: Identifier "Function" })) (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Type","Data","Boolean"], name: Identifier "BProxy" })) (TypeVar "l"))) (TypeApp (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Prim"], name: Identifier "Function" })) (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Type","Data","Boolean"], name: Identifier "BProxy" })) (TypeVar "r"))) (TypeApp (TypeConstructor (QualifiedName { moduleNameParts: ["Type","Data","Boolean"], name: Identifier "BProxy" })) (TypeVar "o"))))))))
-
-  suite "Kind encoder" do
-    test "FunKind" do
-      let k1 =
-            FunKind (Row (NamedKind $ qualified [] "a"))
-                    (FunKind (NamedKind $ qualified [] "b")
-                             (NamedKind $ qualified [] "b"))
-      assertRight (decodeJson $ encodeJson $ k1) k1
 
 
 qualified :: Array String -> String -> QualifiedName

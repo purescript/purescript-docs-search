@@ -3,7 +3,7 @@ module Docs.Search.DocsJson where
 
 import Prelude
 
-import Docs.Search.TypeDecoder (Constraint, FunDeps, Kind, Type, TypeArgument)
+import Docs.Search.TypeDecoder (Constraint, FunDeps, Type, TypeArgument)
 
 import Data.Argonaut.Core (fromString, stringify, toString)
 import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.:), (.:?))
@@ -44,7 +44,7 @@ newtype Declaration
                , comments :: Maybe String
                , info :: { declType      :: DeclType
                          , dataDeclType  :: Maybe DataDeclType
-                         , kind          :: Maybe Kind
+                         , kind          :: Maybe Type
                          , typeArguments :: Maybe (Array TypeArgument)
                          , type          :: Maybe Type
                          , superclasses  :: Maybe (Array Constraint)

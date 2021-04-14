@@ -1,7 +1,7 @@
 module Docs.Search.SearchResult where
 
 import Docs.Search.DocsJson (DataDeclType)
-import Docs.Search.TypeDecoder (Constraint, FunDeps, Kind, QualifiedName, Type, TypeArgument)
+import Docs.Search.TypeDecoder (Constraint, FunDeps, QualifiedName, Type, TypeArgument)
 import Docs.Search.Types (ModuleName, PackageInfo, Identifier, PackageScore)
 
 import Prelude
@@ -19,7 +19,7 @@ import Data.Newtype (class Newtype, un)
 data ResultInfo
   = DataResult            { typeArguments :: Array TypeArgument
                           , dataDeclType :: DataDeclType }
-  | ExternDataResult      { kind :: Kind }
+  | ExternDataResult      { kind :: Type }
   | TypeSynonymResult     { arguments :: Array TypeArgument
                           , type :: Type }
   | DataConstructorResult { arguments :: Array Type }

@@ -4,7 +4,7 @@ import Prelude
 
 import Docs.Search.Extra ((>#>))
 import Docs.Search.Terminal (cyan)
-import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), Kind(..), QualifiedName(..), Type(..), TypeArgument(..), joinForAlls, joinRows)
+import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), QualifiedName(..), Type(..), TypeArgument(..), joinForAlls, joinRows)
 import Docs.Search.Types (Identifier(..))
 
 import Data.Array as Array
@@ -70,7 +70,7 @@ showTypeArgument (TypeArgument { name, mbKind }) =
       "(" <>
       name <>
       " :: " <>
-      showKind kind <>
+      showType kind <>
       ")"
 
 
@@ -135,7 +135,7 @@ showForAll ty =
         " (" <> name <> " "
         <> syntax "::"
         <> space
-        <> showKind kind
+        <> showType kind
         <> ")"
   ) <>
 
@@ -144,15 +144,6 @@ showForAll ty =
 
   where
     foralls = joinForAlls ty
-
-
-showKind
-  :: Kind
-  -> String
-showKind = case _ of
-  Row k1          -> "# " <> showKind k1
-  FunKind k1 k2   -> showKind k1 <> syntax " -> " <> showKind k2
-  NamedKind qname -> showQualifiedName qname
 
 
 showConstraint
