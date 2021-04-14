@@ -11,7 +11,7 @@ import Data.Argonaut.Decode.Error (JsonDecodeError(..))
 import Data.Argonaut.Encode (class EncodeJson, encodeJson)
 import Data.Either (Either(..))
 import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
+import Data.Show.Generic (genericShow)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, unwrap)
 

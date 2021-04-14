@@ -45,9 +45,9 @@
   "dependencies": {},
   "devDependencies": {
     "glob": "^7.1.6",
-    "markdown-it": "^11.0.0",
+    "markdown-it": "^12.0.4",
     "parcel": "^1.12.4",
-    "puppeteer": "^5.2.1",
-    "spago": "^0.15.3"
+    "puppeteer": "^8.0.0",
+    "spago": "^0.20.0"
   }
 }

@@ -12,10 +12,11 @@ import Test.UI as UI
 
 import Test.Extra (assertRight)
 
+import Data.Argonaut.Core (Json)
 import Data.Argonaut.Decode (decodeJson)
 import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
-import Data.Either (fromRight)
+import Data.Either
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Partial.Unsafe (unsafePartial)
@@ -27,29 +28,33 @@ main = do
   runTest mainTest
   UI.main
 
+mkJson :: String -> Json
+mkJson str =
+  unsafePartial $ case jsonParser str of
+    Right r -> r
+
 mainTest :: TestSuite
 mainTest = do
   TypeQuery.tests
   IndexBuilder.tests
   Declarations.tests
   ModuleIndex.tests
-
-  let mkJson x = unsafePartial $ fromRight $ jsonParser x
   suite "FunDeps decoder" do
     test "FunDeps" do
-      let funDeps = mkJson """
-       [
+      let
+        funDeps = mkJson """
           [
-            [
-              "lhs",
-              "rhs"
-            ],
-            [
-              "output"
-            ]
-          ]
-        ]
-      """
+             [
+               [
+                 "lhs",
+                 "rhs"
+               ],
+               [
+                 "output"
+               ]
+             ]
+           ]
+          """
       assertRight (decodeJson funDeps)
         (FunDeps [ FunDep { lhs: [ "lhs", "rhs" ]
                           , rhs: [ "output"]

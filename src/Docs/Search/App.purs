@@ -16,12 +16,15 @@ import Control.Alt (alt)
 import Control.Coroutine as Coroutine
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
+import Data.Map as Map
 import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
+import Effect.Class (liftEffect)
 import Halogen as H
 import Halogen.Aff as HA
+import Halogen.Subscription (subscribe)
 import Halogen.VDom.Driver (runUI)
 import MarkdownIt as MD
 import Web.DOM.ChildNode as ChildNode
@@ -70,8 +73,8 @@ main = do
 
       let initialSearchEngineState = { packageIndex
                                      , moduleIndex
-                                     , index: mempty
-                                     , typeIndex: mempty
+                                     , index: wrap Map.empty
+                                     , typeIndex: wrap Map.empty
                                      , scores
                                      }
 
@@ -85,36 +88,37 @@ main = do
       sfio <- runUI SearchField.component unit searchField
       srio <- runUI resultsComponent unit searchResults
 
-      sfio.subscribe $
-        Coroutine.consumer (srio.query <<< H.tell <<< SearchResults.MessageFromSearchField)
+      H.liftEffect $ subscribe sfio.messages $ \sfm -> do
+        launchAff_ do
+          srio.query (SearchResults.MessageFromSearchField sfm unit)
 
-      -- We need to read the URI hash only when both components are initialized and
-      -- the search field is subscribed to the main component.
-      void $ sfio.query $ H.tell SearchField.ReadURIHash
+      -- -- We need to read the URI hash only when both components are initialized and
+      -- -- the search field is subscribed to the main component.
+      -- void $ sfio.query $ H.tell SearchField.ReadURIHash
 
-      -- Subscribe to URI hash updates
-      H.liftEffect do
+      -- -- Subscribe to URI hash updates
+      -- H.liftEffect do
 
-        listener <-
-          eventListener \event ->
-            launchAff_ do
-              sfio.query $ H.tell SearchField.ReadURIHash
+      --   listener <-
+      --     eventListener \event ->
+      --       launchAff_ do
+      --         sfio.query $ H.tell SearchField.ReadURIHash
 
-        addEventListener hashchange listener true (Window.toEventTarget window)
+      --   addEventListener hashchange listener true (Window.toEventTarget window)
 
-      sbio <- do
-        component <- Sidebar.mkComponent moduleIndex isIndexHTML meta
-        runUI component unit sidebarContainer
+      -- sbio <- do
+      --   component <- Sidebar.mkComponent moduleIndex isIndexHTML meta
+      --   runUI component unit sidebarContainer
 
-      -- Subscribe to window focus events
-      H.liftEffect do
+      -- -- Subscribe to window focus events
+      -- H.liftEffect do
 
-        listener <-
-          eventListener \event ->
-            launchAff_ do
-              sbio.query $ H.tell Sidebar.UpdateModuleGrouping
+      --   listener <-
+      --     eventListener \event ->
+      --       launchAff_ do
+      --         sbio.query $ H.tell Sidebar.UpdateModuleGrouping
 
-        addEventListener focus listener true (Window.toEventTarget window)
+      --   addEventListener focus listener true (Window.toEventTarget window)
 
 
 insertStyle :: Effect Unit

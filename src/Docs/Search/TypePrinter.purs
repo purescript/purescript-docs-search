@@ -127,7 +127,7 @@ showForAll
 showForAll ty =
   keyword "forall" <>
 
-  ( Array.fold $ foralls.binders <#>
+  ( Array.fold $ Array.fromFoldable $ foralls.binders <#>
     \ { name, mbKind } ->
     case mbKind of
       Nothing -> " " <> name

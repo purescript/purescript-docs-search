@@ -10,7 +10,7 @@ import Docs.Search.Types (Identifier(..))
 import Prelude
 
 import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
+import Data.Show.Generic (genericShow)
 import Data.List (List(..), (:))
 import Data.List as List
 import Data.List.NonEmpty as NonEmptyList
