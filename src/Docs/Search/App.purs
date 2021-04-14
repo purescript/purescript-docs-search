@@ -77,7 +77,6 @@ main = do
                                      , typeIndex: wrap Map.empty
                                      , scores
                                      }
-
           resultsComponent =
             SearchResults.mkComponent
               initialSearchEngineState
@@ -88,37 +87,37 @@ main = do
       sfio <- runUI SearchField.component unit searchField
       srio <- runUI resultsComponent unit searchResults
 
-      H.liftEffect $ subscribe sfio.messages $ \sfm -> do
+      void $ H.liftEffect $ subscribe sfio.messages $ \sfm -> do
         launchAff_ do
           srio.query (SearchResults.MessageFromSearchField sfm unit)
 
-      -- -- We need to read the URI hash only when both components are initialized and
-      -- -- the search field is subscribed to the main component.
-      -- void $ sfio.query $ H.tell SearchField.ReadURIHash
+      -- We need to read the URI hash only when both components are initialized and
+      -- the search field is subscribed to the main component.
+      void $ sfio.query $ SearchField.ReadURIHash unit
 
-      -- -- Subscribe to URI hash updates
-      -- H.liftEffect do
+      -- Subscribe to URI hash updates
+      H.liftEffect do
 
-      --   listener <-
-      --     eventListener \event ->
-      --       launchAff_ do
-      --         sfio.query $ H.tell SearchField.ReadURIHash
+        listener <-
+          eventListener \event ->
+            launchAff_ do
+              sfio.query $ SearchField.ReadURIHash unit
 
-      --   addEventListener hashchange listener true (Window.toEventTarget window)
+        addEventListener hashchange listener true (Window.toEventTarget window)
 
-      -- sbio <- do
-      --   component <- Sidebar.mkComponent moduleIndex isIndexHTML meta
-      --   runUI component unit sidebarContainer
+      sbio <- do
+        component <- Sidebar.mkComponent moduleIndex isIndexHTML meta
+        runUI component unit sidebarContainer
 
-      -- -- Subscribe to window focus events
-      -- H.liftEffect do
+      -- Subscribe to window focus events
+      H.liftEffect do
 
-      --   listener <-
-      --     eventListener \event ->
-      --       launchAff_ do
-      --         sbio.query $ H.tell Sidebar.UpdateModuleGrouping
+        listener <-
+          eventListener \event ->
+            launchAff_ do
+              sbio.query $ Sidebar.UpdateModuleGrouping unit
 
-      --   addEventListener focus listener true (Window.toEventTarget window)
+        addEventListener focus listener true (Window.toEventTarget window)
 
 
 insertStyle :: Effect Unit
