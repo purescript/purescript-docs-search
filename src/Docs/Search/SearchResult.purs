@@ -5,7 +5,7 @@ import Docs.Search.TypeDecoder (Constraint, FunDeps, QualifiedName, Type, TypeAr
 import Docs.Search.Types (ModuleName, PackageInfo, Identifier, PackageScore)
 
 import Prelude
-
+import Prim hiding (Type, Constraint)
 import Data.Argonaut.Decode (class DecodeJson)
 import Data.Argonaut.Decode.Generic (genericDecodeJson)
 import Data.Argonaut.Encode (class EncodeJson)

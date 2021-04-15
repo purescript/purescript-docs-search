@@ -7,7 +7,7 @@ import Docs.Search.TypeDecoder (Constraint(..), QualifiedName(..), Type(..), joi
 import Docs.Search.Types (ModuleName(..), PackageName(..), PackageInfo(..), Identifier(..))
 
 import Prelude
-
+import Prim hiding (Type)
 import Control.Alt ((<|>))
 import Data.Array ((!!))
 import Data.Array as Array

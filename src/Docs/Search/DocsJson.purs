@@ -2,7 +2,7 @@
 module Docs.Search.DocsJson where
 
 import Prelude
-
+import Prim hiding (Type, Constraint)
 import Docs.Search.TypeDecoder (Constraint, FunDeps, Type, TypeArgument)
 
 import Data.Argonaut.Core (fromString, stringify, toString)

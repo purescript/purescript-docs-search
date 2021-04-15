@@ -13,7 +13,6 @@ import Docs.Search.Meta as Meta
 import Prelude
 
 import Control.Alt (alt)
-import Control.Coroutine as Coroutine
 import Data.Maybe (Maybe(..))
 import Data.Newtype (wrap)
 import Data.Map as Map
@@ -21,7 +20,6 @@ import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
-import Effect.Class (liftEffect)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.Subscription (subscribe)

@@ -4,7 +4,7 @@ module Docs.Search.TypeDecoder where
 import Docs.Search.Types (Identifier)
 
 import Prelude
-
+import Prim hiding (Type, Constraint)
 import Control.Alt ((<|>))
 import Data.Argonaut.Core (Json, caseJsonObject, fromArray, fromObject, jsonEmptyObject, stringify, toArray)
 import Data.Argonaut.Decode (class DecodeJson, decodeJson, (.:))

@@ -19,7 +19,7 @@ import Docs.Search.TypePrinter (keyword, showConstraint, showFunDeps, showType, 
 import Docs.Search.Types (ModuleName, PackageName, PackageInfo, Identifier)
 
 import Prelude
-
+import Prim hiding (Type, Constraint)
 import Data.Array as Array
 import Data.Identity (Identity(..))
 import Data.List as List

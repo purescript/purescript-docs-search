@@ -2,24 +2,21 @@ module Test.Main where
 
 import Prelude
 
-import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), QualifiedName(..), Type(..))
-import Docs.Search.Types (Identifier(..))
-import Test.TypeQuery as TypeQuery
-import Test.IndexBuilder as IndexBuilder
-import Test.Declarations as Declarations
-import Test.ModuleIndex as ModuleIndex
-import Test.UI as UI
-
-import Test.Extra (assertRight)
-
 import Data.Argonaut.Core (Json)
 import Data.Argonaut.Decode (decodeJson)
-import Data.Argonaut.Encode (encodeJson)
 import Data.Argonaut.Parser (jsonParser)
-import Data.Either
+import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
+import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), QualifiedName(..), Type(..))
+import Docs.Search.Types (Identifier(..))
 import Effect (Effect)
 import Partial.Unsafe (unsafePartial)
+import Test.Declarations as Declarations
+import Test.Extra (assertRight)
+import Test.IndexBuilder as IndexBuilder
+import Test.ModuleIndex as ModuleIndex
+import Test.TypeQuery as TypeQuery
+import Test.UI as UI
 import Test.Unit (TestSuite, suite, test)
 import Test.Unit.Main (runTest)
 

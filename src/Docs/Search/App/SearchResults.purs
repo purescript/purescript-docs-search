@@ -18,7 +18,7 @@ import Docs.Search.Types (Identifier(..), ModuleName(..), PackageName)
 import Docs.Search.Meta (Meta)
 
 import Prelude
-
+import Prim hiding (Type, Constraint)
 import Data.Array ((!!))
 import Data.Array as Array
 import Data.List as List

@@ -1,7 +1,7 @@
 module Docs.Search.TypePrinter where
 
 import Prelude
-
+import Prim hiding (Type, Constraint)
 import Docs.Search.Extra ((>#>))
 import Docs.Search.Terminal (cyan)
 import Docs.Search.TypeDecoder (Constraint(..), FunDep(..), FunDeps(..), QualifiedName(..), Type(..), TypeArgument(..), joinForAlls, joinRows)

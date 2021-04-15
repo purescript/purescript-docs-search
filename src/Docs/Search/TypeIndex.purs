@@ -12,7 +12,7 @@ import Docs.Search.Types (ModuleName(..))
 import Docs.Search.TypeShape (shapeOfType, shapeOfTypeQuery, stringifyShape)
 
 import Prelude
-
+import Prim hiding (Type)
 import Control.Promise (Promise, toAffE)
 import Data.Argonaut.Core (Json)
 import Data.Argonaut.Decode (decodeJson)

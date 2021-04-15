@@ -2,7 +2,7 @@ let mkPackage =
       https://raw.githubusercontent.com/purescript/package-sets/psc-0.13.2-20190725/src/mkPackage.dhall sha256:0b197efa1d397ace6eb46b243ff2d73a3da5638d8d0ac8473e8e4a8fc528cf57
 
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.14.0-20210311/packages.dhall sha256:3da8be2b7b4a0e7de6186591167b363023695accffb98a8639e9e7d06e2070d6
+      https://github.com/purescript/package-sets/releases/download/psc-0.14.0-20210409/packages.dhall sha256:e81c2f2ce790c0e0d79869d22f7a37d16caeb5bd81cfda71d46c58f6199fd33f
 
 let overrides = {=}
 
@@ -65,6 +65,7 @@ let additions =
             , "exists"
             , "node-process"
             , "free"
+            , "memoize"
             ]
             "https://github.com/srghma/purescript-optparse.git"
             "d49b03fcd35f5be167e9c5c44ab1c17ca0956fb1"
@@ -128,4 +129,4 @@ let additions =
             "5c1a44ee95c259352a2b4570b060de14130540bc"
       }
 
-in  upstream ⫽ overrides ⫽ additions
+in  upstream // overrides // additions

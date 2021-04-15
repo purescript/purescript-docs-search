@@ -16,7 +16,7 @@ import Docs.Search.TypeDecoder (QualifiedName(..), Type(..), joinConstraints, jo
 import Docs.Search.Types (Identifier(..))
 
 import Prelude
-
+import Prim hiding (Type)
 import Control.Alt ((<|>))
 import Data.Array as Array
 import Data.Either (Either)
