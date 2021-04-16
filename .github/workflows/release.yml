@@ -1,30 +1,41 @@
-name: Release
+name: release
 on:
   push:
     tags:
       - 'v*.*.*'
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install
-        run: |
-          PURS_VERSION="$(curl -H "Authorization: token $GITHUB_API_TOKEN" --silent "https://api.github.com/repos/purescript/purescript/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')"
-          echo "PureScript version: $PURS_VERSION"
-          wget -O $HOME/purescript.tar.gz https://github.com/purescript/purescript/releases/download/$PURS_VERSION/linux64.tar.gz
-          tar -xvf $HOME/purescript.tar.gz -C $HOME/
-          chmod a+x $HOME/purescript
-          npm install -g spago
-          npm install
-          spago install
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+
+      - uses: purescript-contrib/setup-purescript@main
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('./**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache PureScript dependencies
+        uses: actions/cache@v2
+        with:
+          key: ${{ runner.os }}-spago-${{ hashFiles('./**/*.dhall') }}
+          path: |
+            .spago
+            output
+
       - name: Build
         run: |
+          npm ci
+          spago install
           npm run build
-          npm test
-          spago docs --no-search
-          ./dist/purescript-docs-search build-index
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
@@ -33,3 +44,9 @@ jobs:
             dist/purescript-docs-search
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to NPM
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_API_TOKEN }}
+        run: npm publish --non-interactive --access public
