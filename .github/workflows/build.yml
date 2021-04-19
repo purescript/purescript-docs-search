@@ -32,6 +32,8 @@ jobs:
             output
 
       - name: Install
+        env:
+          NODE_AUTH_TOKEN: ""
         run: |
           npm ci
           spago install
