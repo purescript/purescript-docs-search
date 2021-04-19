@@ -39,6 +39,8 @@ jobs:
           spago install
 
       - name: Build
+        env:
+          NODE_AUTH_TOKEN: ''
         run: |
           npm run build
           npm test
