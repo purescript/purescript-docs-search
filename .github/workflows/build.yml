@@ -32,15 +32,11 @@ jobs:
             output
 
       - name: Install
-        env:
-          NODE_AUTH_TOKEN: ''
         run: |
           npm ci
           spago install
 
       - name: Build
-        env:
-          NODE_AUTH_TOKEN: ''
         run: |
           npm run build
           npm test

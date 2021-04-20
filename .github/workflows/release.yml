@@ -31,8 +31,6 @@ jobs:
             output
 
       - name: Build
-        env:
-          NODE_AUTH_TOKEN: ''
         run: |
           npm ci
           spago install
@@ -51,4 +49,7 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_API_TOKEN }}
-        run: npm publish --non-interactive --access public
+        run: |
+          mv ci-npmrc.txt .npmrc
+          npm ci
+          npm publish --non-interactive --access public
