@@ -98,6 +98,8 @@ data Type
   | TypeOp QualifiedName
   -- | A type application
   | TypeApp Type Type
+  -- | Explicit kind application
+  | KindApp Type Type
   -- | Forall quantifier
   | ForAll String (Maybe Type) Type
   -- | A type withset of type class constraints
@@ -110,10 +112,8 @@ data Type
   | REmpty
   -- | A non-empty row
   | RCons Identifier Type Type
-  {-
   -- | A type with a kind annotation
-  | Kinded Type Kind
-  -}
+  | Kinded Type Type
   -- | Binary operator application. During the rebracketing phase of desugaring,
   -- this data constructor will be removed.
   | BinaryNoParensType Type Type Type
@@ -139,6 +139,9 @@ instance decodeJsonType :: DecodeJson Type where
       "TypeApp" ->
         decodeContents (decodeTuple TypeApp (const err)) (Left err) json
         where err = mkJsonError' "TypeApp" json
+      "KindApp" ->
+        decodeContents (decodeTuple KindApp (const err)) (Left err) json
+        where err = mkJsonError' "KindApp" json
       "ForAll" ->
         decodeContents
         (decodeTriple
@@ -163,6 +166,9 @@ instance decodeJsonType :: DecodeJson Type where
       "RCons" ->
         decodeContents (decodeTriple RCons (const err)) (Left err) json
         where err = mkJsonError' "RCons" json
+      "KindedType" ->
+        decodeContents (decodeTuple Kinded (const err)) (Left err) json
+        where err = mkJsonError' "KindedType" json
       "BinaryNoParensType" ->
         decodeContents (decodeTriple BinaryNoParensType (const err)) (Left err) json
         where err = mkJsonError' "BinaryNoParens" json
@@ -180,11 +186,13 @@ instance encodeJsonType :: EncodeJson Type where
     TypeConstructor val    -> tagged "TypeConstructor" (encodeJson val)
     TypeOp          val    -> tagged "TypeOp"          (encodeJson val)
     TypeApp t1 t2          -> tagged "TypeApp"         (encodeTuple t1 t2)
+    KindApp t1 t2          -> tagged "KindApp"         (encodeTuple t1 t2)
     ForAll str Nothing ty  -> tagged "ForAll"          (encodeTriple str ty emptySkolemScope)
     ForAll str (Just k) ty -> tagged "ForAll"          (encodeQuadriple str k ty emptySkolemScope)
     ConstrainedType c t    -> tagged "ConstrainedType" (encodeTuple c t)
     REmpty                 -> tagged "REmpty"          jsonEmptyObject
     RCons s t1 t2          -> tagged "RCons"           (encodeTriple s t1 t2)
+    Kinded t1 t2           -> tagged "KindedType"      (encodeTuple t1 t2)
     ParensInType t         -> tagged "ParensInType"    (encodeJson t)
     TypeWildcard           -> tagged "TypeWildcard"    jsonEmptyObject
     BinaryNoParensType t1 t2 t3 ->

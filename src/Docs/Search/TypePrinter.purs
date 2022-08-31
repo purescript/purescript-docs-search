@@ -37,6 +37,9 @@ showType = case _ of
   TypeApp t1 t2 ->
     showType t1 <> " " <> showType t2
 
+  KindApp t1 t2 ->
+    showType t1 <> " " <> showType t2
+
   ty@(ForAll _ _ _) ->
     showForAll ty
 
@@ -47,6 +50,8 @@ showType = case _ of
 
   ty@REmpty -> showRow true ty
   ty@(RCons _ _ _) -> showRow true ty
+
+  Kinded t1 t2 -> showType t1 <> " :: " <> showType t2
 
   BinaryNoParensType op t1 t2 ->
     showType t1 <>

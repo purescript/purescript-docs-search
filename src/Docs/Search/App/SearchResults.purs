@@ -202,9 +202,9 @@ render state@{ mode: Active } =
   , HH.div_ $
     Array.concat $ shownResults <#> renderResult state
 
-  , HH.div [ HP.class_ (wrap "load_more"), HP.id_ "load-more" ]
+  , HH.div [ HP.class_ (wrap "load_more"), HP.id "load-more" ]
     [ if Array.length shownResults < Array.length state.results
-      then HH.a [ HP.id_ "load-more-link"
+      then HH.a [ HP.id "load-more-link"
                 , HE.onClick $ const MoreResultsRequested ]
            [ HH.text "Show more results" ]
       else HH.p_
@@ -545,6 +545,9 @@ renderType = case _ of
              , renderType t2
              ]
 
+  KindApp t1 t2 ->
+    HH.span_ [ renderType t1, space, renderType t2 ]
+
   ty@(ForAll _ _ _) ->
     renderForAll ty
 
@@ -557,6 +560,9 @@ renderType = case _ of
 
   ty@REmpty -> renderRow true ty
   ty@(RCons _ _ _) -> renderRow true ty
+
+  Kinded t1 t2 ->
+    HH.span_ [ renderType t1, space, syntax "::", space, renderType t2 ]
 
   BinaryNoParensType op t1 t2 ->
     HH.span_

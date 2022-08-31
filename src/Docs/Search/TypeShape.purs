@@ -115,6 +115,9 @@ shapeOfType ty = List.reverse $ go (pure ty) Nil
         TypeApp child1 child2 ->
           go (child1 : child2 : rest) (PApp : acc)
 
+        KindApp child1 child2 ->
+          go (child1 : child2 : rest) (PApp : acc)
+
         forallType@(ForAll _ _ _) ->
           go (foralls.ty : rest) (PForAll (List.length foralls.binders) : acc)
           where foralls = joinForAlls forallType
@@ -135,6 +138,8 @@ shapeOfType ty = List.reverse $ go (pure ty) Nil
             joined = joinRows row
             sorted = List.sortBy (\x y -> compare x.row y.row) joined.rows
             typesInRow = sorted <#> (_.ty)
+
+        Kinded t1 _t2 -> go (t1 : rest) acc
 
         BinaryNoParensType op l r ->
           go (TypeApp (TypeApp op l) r : rest) acc
