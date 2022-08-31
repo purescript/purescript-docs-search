@@ -1,6 +1,6 @@
 # purescript-docs-search
 
-[![Build status](https://travis-ci.org/spacchetti/purescript-docs-search.svg?branch=master)](https://travis-ci.org/spacchetti/purescript-docs-search)
+[![Build status](https://github.com/purescript/purescript-docs-search/actions/workflows/build.yml/badge.svg)](https://github.com/purescript/purescript-docs-search/actions/workflows/build.yml)
 
 An app that adds search capabilities to generated documentation for purescript code.
 
