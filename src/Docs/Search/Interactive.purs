@@ -194,6 +194,9 @@ showSignature result@{ name, info } =
     ValueAliasResult ->
       yellow ("(" <> unwrap name <> ")")
 
+    DataConstructorResult info' ->
+      showDataConstructorSignature info' result
+
     _ -> yellow $ unwrap name
 
 
@@ -294,9 +297,31 @@ showExternDataSignature { kind } { name } =
   keyword "foreign data" <>
   space <>
   yellow (unwrap name) <>
-  space <>
   syntax " :: " <>
   showType kind
+
+
+showDataConstructorSignature
+  :: forall rest
+  .  { dataDeclType :: DataDeclType
+     , "type" :: Type
+     }
+  -> { name :: Identifier
+     | rest
+     }
+  -> String
+showDataConstructorSignature { dataDeclType, type: ctorType } { name } =
+  ( keyword
+    case dataDeclType of
+      NewtypeDataDecl -> "newtype constructor"
+      DataDataDecl -> "data constructor"
+  ) <>
+  space <>
+  yellow (unwrap name) <>
+  space <>
+  syntax "::" <>
+  space <>
+  showType ctorType
 
 
 leftShift :: Int -> String -> String
