@@ -50,6 +50,7 @@
     "glob": "^7.1.6",
     "markdown-it": "^12.0.4",
     "puppeteer": "^8.0.0",
-    "spago": "^0.93.14"
+    "spago": "npm:spago@^0.21.0",
+    "spago-next": "npm:spago@^0.93.14"
   }
 }
