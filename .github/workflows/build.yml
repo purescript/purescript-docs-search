@@ -41,6 +41,12 @@ jobs:
       - name: Build
         run: |
           npm run build
+
+      - name: Test
+        run: |
           npm test
+
+      - name: Bundle
+        run: |
           npx spago docs --no-search
           ./dist/purescript-docs-search.cjs build-index
