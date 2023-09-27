@@ -16,7 +16,8 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "npm exec --y --package=./node_modules/spago-legacy -- spago docs --no-search && ./dist/purescript-docs-search.cjs build-index && spago test && npm run check-version",
+    "docs": "npm exec --y --package=./node_modules/spago-legacy -- spago docs --no-search && ./dist/purescript-docs-search.cjs build-index",
+    "test": "npm run docs && spago test && npm run check-version",
     "bundle-app": "npm exec --y --package=./node_modules/spago-legacy -- spago bundle-app --no-build --no-install -m Docs.Search.App --to dist/docs-search-app.js",
     "esbuild-app": "esbuild dist/docs-search-app.js --target=es2016 --bundle --minify --outfile=dist/docs-search-app.min.js && mv dist/docs-search-app.min.js dist/docs-search-app.js",
     "build-app": "npm run bundle-app && npm run esbuild-app",
