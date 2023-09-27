@@ -32,11 +32,11 @@ jobs:
       - name: Install
         run: |
           npm ci
-          spago install
+          npx spago install
 
       - name: Build
         run: |
           npm run build
           npm test
-          spago docs --no-search
+          npx spago docs --no-search
           ./dist/purescript-docs-search.cjs build-index

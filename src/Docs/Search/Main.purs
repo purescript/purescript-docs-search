@@ -23,7 +23,6 @@ import Options.Applicative as CA
 
 main :: Effect Unit
 main = do
-  log $ "Chuck was here"
 
   args <- getArgs
   let defaultCommands = Search { docsFiles: defaultDocsFiles
