@@ -25,7 +25,7 @@
     "add-shebang": "echo \"#!/usr/bin/env node\" > dist/purescript-docs-search.cjs && cat dist/main.js >> dist/purescript-docs-search.cjs",
     "chmod-main": "chmod +x dist/purescript-docs-search.cjs",
     "build-main": "npm run bundle-main && npm run esbuild-main && npm run add-shebang && rm dist/main.js && npm run chmod-main",
-    "build": "npm exec --y --package=./node_modules/spago-legacy -- spago build && npm run build-app && npm run build-main",
+    "build": "spago build && npm run build-app && npm run build-main",
     "clean": "rm -rf dist",
     "check-version": "[ \"$(./dist/purescript-docs-search.cjs version)\" = \"$npm_package_version\" ]"
   },
