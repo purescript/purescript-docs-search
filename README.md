@@ -2,6 +2,8 @@
 
 [![Build status](https://github.com/purescript/purescript-docs-search/actions/workflows/build.yml/badge.svg)](https://github.com/purescript/purescript-docs-search/actions/workflows/build.yml)
 
+**This project has been merged into the [spago codebase](https://github.com/purescript/spago/tree/master/docs-search)!**
+
 An app that adds search capabilities to generated documentation for PureScript code.
 
 It supports nearly-all functionality of [Pursuit](https://github.com/purescript/pursuit), including querying by type.
